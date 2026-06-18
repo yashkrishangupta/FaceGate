@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/attendanceFragment">
+
+    <fragment
+        android:id="@+id/attendanceFragment"
+        android:name="com.facegate.ui.attendance.AttendanceFragment"
+        android:label="Attendance">
+
+        <action
+            android:id="@+id/action_attendance_to_admin"
+            app:destination="@id/adminDashboard" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminDashboard"
+        android:name="com.facegate.ui.admin.AdminDashboard"
+        android:label="Admin Dashboard">
+
+        <action
+            android:id="@+id/action_admin_to_conflicts"
+            app:destination="@id/conflictQueueFragment" />
+
+        <action
+            android:id="@+id/action_admin_to_enrollment"
+            app:destination="@id/enrollmentFragment" />
+
+        <action
+            android:id="@+id/action_admin_to_reports"
+            app:destination="@id/attendanceReportFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/conflictQueueFragment"
+        android:name="com.facegate.ui.admin.ConflictQueueFragment"
+        android:label="Conflict Queue" />
+
+    <fragment
+        android:id="@+id/enrollmentFragment"
+        android:name="com.facegate.ui.enrollment.EnrollmentFragment"
+        android:label="Enrollment" />
+
+    <fragment
+        android:id="@+id/attendanceReportFragment"
+        android:name="com.facegate.ui.reports.AttendanceReportFragment"
+        android:label="Attendance Report" />
+
+</navigation>
