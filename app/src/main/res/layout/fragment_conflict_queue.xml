@@ -19,18 +19,20 @@
         android:background="#FFFFFF"
         android:elevation="2dp">
 
-        <ImageView
+        <TextView
             android:id="@+id/btnBack"
-            android:layout_width="36dp"
+            android:layout_width="wrap_content"
             android:layout_height="36dp"
-            android:src="@android:drawable/ic_media_previous"
-            android:tint="#444441"
+            android:text="← Back"
+            android:textColor="#444441"
+            android:textSize="13sp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:gravity="center"
             android:background="@drawable/icon_action_bg"
-            android:padding="6dp"
             android:clickable="true"
             android:focusable="true"
-            android:layout_marginEnd="14dp"
-            android:contentDescription="Back"/>
+            android:layout_marginEnd="14dp"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -42,7 +44,7 @@
 
     </LinearLayout>
 
-    <!-- CONTENT -->
+    <!-- SCROLLABLE CONTENT -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -53,7 +55,7 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Info banner -->
+            <!-- Info Banner -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -63,13 +65,13 @@
                 android:background="@drawable/bg_conflict_banner"
                 android:layout_marginBottom="16dp">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@android:drawable/ic_dialog_alert"
-                    android:tint="#A32D2D"
-                    android:layout_marginEnd="10dp"
-                    android:contentDescription="Warning"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⚠"
+                    android:textSize="18sp"
+                    android:textColor="#A32D2D"
+                    android:layout_marginEnd="10dp"/>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -81,7 +83,7 @@
 
             </LinearLayout>
 
-            <!-- Section title -->
+            <!-- Section Title -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -91,7 +93,7 @@
                 android:textColor="#444441"
                 android:layout_marginBottom="12dp"/>
 
-            <!-- Conflict List -->
+            <!-- Conflict items added here dynamically -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -99,11 +101,12 @@
                 app:cardElevation="1dp"
                 app:cardBackgroundColor="#FFFFFF">
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/conflictRecyclerView"
+                <!-- Container for dynamic conflict rows -->
+                <LinearLayout
+                    android:id="@+id/conflictContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false"/>
+                    android:orientation="vertical"/>
 
             </androidx.cardview.widget.CardView>
 

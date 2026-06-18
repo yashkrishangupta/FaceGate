@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    ATTENDANCE REPORT FRAGMENT LAYOUT
+    Used by: AttendanceReportFragment.kt
+    Shows: stats, class bars, export buttons
+-->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -7,30 +12,33 @@
     android:orientation="vertical"
     android:background="#F0F4F8">
 
-    <!-- TOP BAR -->
+    <!-- ── TOP BAR ── -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="14dp"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp"
         android:background="#FFFFFF"
         android:elevation="2dp">
 
-        <ImageView
+        <TextView
             android:id="@+id/btnBack"
-            android:layout_width="36dp"
+            android:layout_width="wrap_content"
             android:layout_height="36dp"
-            android:src="@android:drawable/ic_media_previous"
-            android:tint="#444441"
+            android:text="← Back"
+            android:textColor="#444441"
+            android:textSize="13sp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:gravity="center"
             android:background="@drawable/icon_action_bg"
-            android:padding="6dp"
             android:clickable="true"
             android:focusable="true"
-            android:layout_marginEnd="14dp"
-            android:contentDescription="Back"/>
+            android:layout_marginEnd="14dp"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -42,7 +50,7 @@
 
     </LinearLayout>
 
-    <!-- CONTENT -->
+    <!-- ── SCROLLABLE CONTENT ── -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -53,20 +61,22 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- STAT CARDS 2x2 -->
+            <!-- ── STAT CARDS ROW 1 ── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginBottom="12dp">
 
+                <!-- Monthly Attendance -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp">
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="#FFFFFF">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -84,7 +94,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="MONTHLY ATTENDANCE"
+                            android:text="MONTHLY"
                             android:textSize="10sp"
                             android:textStyle="bold"
                             android:textColor="#888780"
@@ -93,13 +103,15 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
+                <!-- Present Today -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp">
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="#FFFFFF">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -117,7 +129,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="PRESENT TODAY"
+                            android:text="PRESENT"
                             android:textSize="10sp"
                             android:textStyle="bold"
                             android:textColor="#888780"
@@ -128,19 +140,22 @@
 
             </LinearLayout>
 
+            <!-- ── STAT CARDS ROW 2 ── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginBottom="20dp">
 
+                <!-- Absent Today -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp">
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="#FFFFFF">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -158,7 +173,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="ABSENT TODAY"
+                            android:text="ABSENT"
                             android:textSize="10sp"
                             android:textStyle="bold"
                             android:textColor="#888780"
@@ -167,13 +182,15 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
+                <!-- Top Class -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="1dp">
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="#FFFFFF">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -191,7 +208,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="TOP CLASS (10-A)"
+                            android:text="TOP CLASS"
                             android:textSize="10sp"
                             android:textStyle="bold"
                             android:textColor="#888780"
@@ -202,7 +219,7 @@
 
             </LinearLayout>
 
-            <!-- CLASS WISE SECTION -->
+            <!-- ── CLASS WISE SECTION ── -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -215,9 +232,10 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="20dp"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="1dp">
+                app:cardElevation="1dp"
+                app:cardBackgroundColor="#FFFFFF">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -233,7 +251,7 @@
                         android:gravity="center_vertical"
                         android:layout_marginBottom="14dp">
                         <TextView
-                            android:layout_width="70dp"
+                            android:layout_width="72dp"
                             android:layout_height="wrap_content"
                             android:text="Class 9-A"
                             android:textSize="13sp"
@@ -267,7 +285,7 @@
                         android:gravity="center_vertical"
                         android:layout_marginBottom="14dp">
                         <TextView
-                            android:layout_width="70dp"
+                            android:layout_width="72dp"
                             android:layout_height="wrap_content"
                             android:text="Class 9-B"
                             android:textSize="13sp"
@@ -301,7 +319,7 @@
                         android:gravity="center_vertical"
                         android:layout_marginBottom="14dp">
                         <TextView
-                            android:layout_width="70dp"
+                            android:layout_width="72dp"
                             android:layout_height="wrap_content"
                             android:text="Class 10-A"
                             android:textSize="13sp"
@@ -332,9 +350,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
                         <TextView
-                            android:layout_width="70dp"
+                            android:layout_width="72dp"
                             android:layout_height="wrap_content"
                             android:text="Class 10-B"
                             android:textSize="13sp"
@@ -360,10 +379,43 @@
                             android:gravity="end"/>
                     </LinearLayout>
 
+                    <!-- Class 11-A -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <TextView
+                            android:layout_width="72dp"
+                            android:layout_height="wrap_content"
+                            android:text="Class 11-A"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="#1A202C"/>
+                        <ProgressBar
+                            android:layout_width="0dp"
+                            android:layout_height="7dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginEnd="12dp"
+                            style="@android:style/Widget.ProgressBar.Horizontal"
+                            android:progressTint="#639922"
+                            android:progress="86"
+                            android:progressBackgroundTint="#D3D1C7"/>
+                        <TextView
+                            android:layout_width="36dp"
+                            android:layout_height="wrap_content"
+                            android:text="86%"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="#27500A"
+                            android:gravity="end"/>
+                    </LinearLayout>
+
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- EXPORT BUTTONS -->
+            <!-- ── EXPORT SECTION ── -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -373,6 +425,7 @@
                 android:textColor="#444441"
                 android:layout_marginBottom="12dp"/>
 
+            <!-- Export Excel Button -->
             <LinearLayout
                 android:id="@+id/btnExportExcel"
                 android:layout_width="match_parent"
@@ -384,22 +437,26 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:layout_marginBottom="10dp">
-                <ImageView
+
+                <TextView
                     android:layout_width="22dp"
                     android:layout_height="22dp"
-                    android:src="@android:drawable/ic_menu_save"
-                    android:tint="#0F6E56"
-                    android:layout_marginEnd="10dp"
-                    android:contentDescription="Export Excel"/>
+                    android:text="📊"
+                    android:textSize="18sp"
+                    android:gravity="center"
+                    android:layout_marginEnd="10dp"/>
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Export Attendance to Excel (.xlsx)"
-                    android:textSize="15sp"
+                    android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="#0F6E56"/>
+
             </LinearLayout>
 
+            <!-- Export PDF Button -->
             <LinearLayout
                 android:id="@+id/btnExportPdf"
                 android:layout_width="match_parent"
@@ -409,21 +466,25 @@
                 android:padding="16dp"
                 android:background="@drawable/bg_conflict_banner"
                 android:clickable="true"
-                android:focusable="true">
-                <ImageView
+                android:focusable="true"
+                android:layout_marginBottom="20dp">
+
+                <TextView
                     android:layout_width="22dp"
                     android:layout_height="22dp"
-                    android:src="@android:drawable/ic_menu_save"
-                    android:tint="#A32D2D"
-                    android:layout_marginEnd="10dp"
-                    android:contentDescription="Export PDF"/>
+                    android:text="📄"
+                    android:textSize="18sp"
+                    android:gravity="center"
+                    android:layout_marginEnd="10dp"/>
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Export Report to PDF"
-                    android:textSize="15sp"
+                    android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="#A32D2D"/>
+
             </LinearLayout>
 
         </LinearLayout>
