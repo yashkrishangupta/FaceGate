@@ -1,20 +1,18 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.android)
 }
 
 android {
     namespace = "com.facegate"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.facegate"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -36,24 +34,33 @@ android {
             )
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+
+    buildFeatures {
+        viewBinding = true
+        dataBinding = true
     }
 
-    // Room schema export location
-    ksp {
-        arg("room.schemaLocation", "$projectDir/schemas")
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
     }
 
     packaging {
         resources {
             excludes += setOf(
                 "META-INF/INDEX.LIST",
-                "META-INF/io.netty.versions.properties",
+                "META-INF/io.netty.versions.properties"
             )
         }
     }
+}
+
+// Room schema export location
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
@@ -62,35 +69,39 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.navigation.fragment)
+    implementation(libs.androidx.navigation.ui)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    // ── ML Pipeline ────────────────────────────────────────
+    // ML Pipeline
     implementation(libs.mlkit.face.detection)
     implementation(libs.onnxruntime.android)
     implementation(libs.opencv)
 
-    // ── Room + SQLCipher ───────────────────────────────────
+    // Room + SQLCipher
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
     implementation(libs.sqlcipher.android)
     implementation(libs.sqlite.ktx)
 
-    // ── CameraX ────────────────────────────────────────────
+    // CameraX
     implementation(libs.camera.camera2)
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
 
-    // ── WorkManager ────────────────────────────────────────
+    // WorkManager
     implementation(libs.work.runtime.ktx)
 
-    // ── Coroutines ─────────────────────────────────────────
+    // Coroutines
     implementation(libs.coroutines.android)
     implementation(libs.coroutines.play.services)
 
-    // ── Lifecycle / ViewModel ──────────────────────────────
+    // Lifecycle / ViewModel
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.lifecycle.runtime.ktx)
+    implementation("com.google.android.material:material:1.11.0")
 }
