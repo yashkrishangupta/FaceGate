@@ -74,16 +74,16 @@
         <!-- Face Oval -->
         <ImageView
             android:id="@+id/faceOval"
-            android:layout_width="150dp"
-            android:layout_height="195dp"
+            android:layout_width="300dp"
+            android:layout_height="400dp"
             android:layout_gravity="center"
-            android:src="@drawable/oval_face_guide"
-            android:contentDescription="Face guide oval"/>
+            android:contentDescription="Face guide oval"
+            android:src="@drawable/oval_face_guide" />
 
         <!-- Scan Line -->
         <View
             android:id="@+id/scanLine"
-            android:layout_width="140dp"
+            android:layout_width="280dp"
             android:layout_height="2dp"
             android:layout_gravity="center"
             android:background="@drawable/scan_line_gradient"
