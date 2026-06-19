@@ -9,6 +9,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.facegate.ui.admin.AdminDashboard
 import com.facegate.ui.attendance.AttendanceFragment
 import dagger.hilt.android.AndroidEntryPoint
+import android.content.Intent
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -33,17 +34,24 @@ class MainActivity : AppCompatActivity() {
         val btnAdmin = findViewById<Button>(R.id.btnAdmin)
 
         btnStudent.setOnClickListener {
-            supportFragmentManager.beginTransaction()
-                .replace(android.R.id.content, com.facegate.ui.attendance.AttendanceFragment())
-                .addToBackStack(null)
-                .commit()
+            startActivity(
+                Intent(
+                    this,
+                    NavigationActivity::class.java
+                )
+            )
         }
 
         btnAdmin.setOnClickListener {
-            supportFragmentManager.beginTransaction()
-                .replace(android.R.id.content, com.facegate.ui.admin.AdminDashboard())
-                .addToBackStack(null)
-                .commit()
+
+            startActivity(
+                Intent(
+                    this,
+                    NavigationActivity::class.java
+                )
+            )
         }
+
     }
+
 }

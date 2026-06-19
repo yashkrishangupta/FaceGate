@@ -6,28 +6,23 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
+import com.facegate.R
 import com.facegate.databinding.FragmentAdminDashboardBinding
+import dagger.hilt.android.AndroidEntryPoint
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import dagger.hilt.android.AndroidEntryPoint
 
-/**
- * ADMIN DASHBOARD FRAGMENT
- * Matches: #s-dashboard in HTML
- * Shows stats, quick actions, bottom nav
- */
 @AndroidEntryPoint
 class AdminDashboard : Fragment() {
 
     private var _binding: FragmentAdminDashboardBinding? = null
     private val binding get() = _binding!!
 
-    // Live clock handler
-    // Matches: setInterval(() => {...}, 1000) in JS
     private val clockHandler = Handler(Looper.getMainLooper())
+
     private val clockRunnable = object : Runnable {
         override fun run() {
             updateClock()
@@ -35,15 +30,15 @@ class AdminDashboard : Fragment() {
         }
     }
 
-    // ── LIFECYCLE ────────────────────────────────────
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentAdminDashboardBinding.inflate(
-            inflater, container, false
+            inflater,
+            container,
+            false
         )
         return binding.root
     }
@@ -53,9 +48,12 @@ class AdminDashboard : Fragment() {
         savedInstanceState: Bundle?
     ) {
         super.onViewCreated(view, savedInstanceState)
+
         setupClickListeners()
         updateDate()
+
         clockHandler.post(clockRunnable)
+
         loadStats()
     }
 
@@ -65,13 +63,16 @@ class AdminDashboard : Fragment() {
         _binding = null
     }
 
-    // ── CLOCK & DATE ─────────────────────────────────
+    // ─────────────────────────────────────────────
+    // Clock & Date
+    // ─────────────────────────────────────────────
 
     private fun updateClock() {
         val time = SimpleDateFormat(
             "hh:mm a",
             Locale.getDefault()
         ).format(Date())
+
         binding.tvClock.text = time
     }
 
@@ -80,64 +81,88 @@ class AdminDashboard : Fragment() {
             "EEEE, d MMMM yyyy",
             Locale.getDefault()
         ).format(Date())
+
         binding.tvDate.text = date
     }
 
-    // ── STATS ────────────────────────────────────────
+    // ─────────────────────────────────────────────
+    // Dashboard Stats
+    // ─────────────────────────────────────────────
 
     private fun loadStats() {
         binding.tvTotalStudents.text = "248"
-        binding.tvPresentToday.text  = "211"
-        binding.tvAbsentToday.text   = "37"
-        binding.tvHolidaysLeft.text  = "8"
+        binding.tvPresentToday.text = "211"
+        binding.tvAbsentToday.text = "37"
+        binding.tvHolidaysLeft.text = "8"
     }
 
-    // ── CLICK LISTENERS ──────────────────────────────
+    // ─────────────────────────────────────────────
+    // Navigation Click Listeners
+    // ─────────────────────────────────────────────
 
     private fun setupClickListeners() {
 
-        // Quick action tiles
+        // Students
         binding.tileStudents.setOnClickListener {
-            showToast("Manage Students — coming soon")
+            findNavController().navigate(
+                R.id.action_dashboard_to_students
+            )
         }
 
+        // Manual Attendance
         binding.tileManual.setOnClickListener {
-            showToast("Manual Attendance — coming soon")
+            findNavController().navigate(
+                R.id.action_dashboard_to_manual
+            )
         }
 
+        // Holidays
         binding.tileHolidays.setOnClickListener {
-            showToast("Holidays — coming soon")
+            findNavController().navigate(
+                R.id.action_dashboard_to_holidays
+            )
         }
 
+        // Reports
         binding.tileReports.setOnClickListener {
-            showToast("Reports — coming soon")
+            findNavController().navigate(
+                R.id.action_dashboard_to_reports
+            )
         }
 
-        // Conflict banner
+        // Conflict Queue
         binding.btnResolve.setOnClickListener {
-            showToast("Conflict Queue — coming soon")
+            findNavController().navigate(
+                R.id.action_dashboard_to_conflicts
+            )
         }
 
-        // Bottom navigation
+        // Bottom Nav → Students
         binding.navStudents.setOnClickListener {
-            showToast("Students — coming soon")
+            findNavController().navigate(
+                R.id.action_dashboard_to_students
+            )
         }
 
+        // Bottom Nav → Attendance
         binding.navAttendance.setOnClickListener {
-            showToast("Attendance — coming soon")
+            findNavController().navigate(
+                R.id.action_dashboard_to_welcome
+            )
         }
 
+        // Bottom Nav → Reports
         binding.navReports.setOnClickListener {
-            showToast("Reports — coming soon")
+            findNavController().navigate(
+                R.id.action_dashboard_to_reports
+            )
         }
 
+        // Exit
         binding.navExit.setOnClickListener {
-            // Go back to welcome
             requireActivity().finish()
         }
-    }
 
-    private fun showToast(message: String) {
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+
     }
 }
