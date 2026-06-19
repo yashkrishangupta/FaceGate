@@ -9,6 +9,9 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import com.facegate.pipeline.AttendancePipeline
 
 /**
  * Scan state sealed class
@@ -33,7 +36,9 @@ sealed class ScanState {
  * Matches: triggerStudentScan() logic in JS
  */
 @HiltViewModel
-class AttendanceViewModel : ViewModel() {
+class AttendanceViewModel @Inject constructor(
+    private val pipeline: AttendancePipeline
+) : ViewModel() {
 
     // StateFlow replaces JS event system
     private val _scanState = MutableStateFlow<ScanState>(ScanState.Idle)

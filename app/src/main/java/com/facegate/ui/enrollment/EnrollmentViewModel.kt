@@ -6,6 +6,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import com.facegate.pipeline.AttendancePipeline
 
 /**
  * Enrollment state sealed class
@@ -25,7 +28,9 @@ sealed class EnrollmentState {
  * Shows duplicate warnings if face already exists
  */
 @HiltViewModel
-class EnrollmentViewModel : ViewModel() {
+class EnrollmentViewModel @Inject constructor(
+    private val pipeline: AttendancePipeline
+) : ViewModel() {
 
     private val _enrollmentState =
         MutableStateFlow<EnrollmentState>(EnrollmentState.Idle)

@@ -12,6 +12,7 @@ import com.facegate.databinding.FragmentAdminDashboardBinding
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * ADMIN DASHBOARD FRAGMENT
