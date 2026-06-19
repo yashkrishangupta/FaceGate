@@ -27,6 +27,7 @@ import androidx.core.content.ContextCompat
  * Camera screen with face oval and scan simulation
  * Properly observes ViewModel state
  */
+@AndroidEntryPoint
 class AttendanceFragment : Fragment() {
 
     private var _binding: FragmentAttendanceBinding? = null

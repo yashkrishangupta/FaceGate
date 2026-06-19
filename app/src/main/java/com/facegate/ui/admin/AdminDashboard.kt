@@ -18,6 +18,7 @@ import java.util.Locale
  * Matches: #s-dashboard in HTML
  * Shows stats, quick actions, bottom nav
  */
+@AndroidEntryPoint
 class AdminDashboard : Fragment() {
 
     private var _binding: FragmentAdminDashboardBinding? = null
