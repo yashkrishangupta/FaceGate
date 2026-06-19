@@ -32,6 +32,7 @@ sealed class ScanState {
  * Connects pipeline.processFrame() to UI via StateFlow
  * Matches: triggerStudentScan() logic in JS
  */
+@HiltViewModel
 class AttendanceViewModel : ViewModel() {
 
     // StateFlow replaces JS event system

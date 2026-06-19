@@ -12,6 +12,7 @@ import com.facegate.databinding.FragmentAttendanceReportBinding
  * Matches: #s-reports in HTML
  * Shows monthly stats, class wise bars, export buttons
  */
+@AndroidEntryPoint
 class AttendanceReportFragment : Fragment() {
 
     private var _binding: FragmentAttendanceReportBinding? = null

@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
  * Captures 5 photos from different angles
  * Matches: enrollment flow in project blueprint
  */
+@AndroidEntryPoint
 class EnrollmentFragment : Fragment() {
 
     private var _binding: FragmentEnrollmentBinding? = null

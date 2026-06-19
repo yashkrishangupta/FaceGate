@@ -24,6 +24,7 @@ sealed class EnrollmentState {
  * Calls pipeline.enrollStudent()
  * Shows duplicate warnings if face already exists
  */
+@HiltViewModel
 class EnrollmentViewModel : ViewModel() {
 
     private val _enrollmentState =

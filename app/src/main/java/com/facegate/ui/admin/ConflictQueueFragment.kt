@@ -26,6 +26,8 @@ data class ConflictRecord(
  * CONFLICT QUEUE FRAGMENT
  * Lists ambiguous attendance cases for admin review
  */
+
+@AndroidEntryPoint
 class ConflictQueueFragment : Fragment() {
 
     private var _binding: FragmentConflictQueueBinding? = null
