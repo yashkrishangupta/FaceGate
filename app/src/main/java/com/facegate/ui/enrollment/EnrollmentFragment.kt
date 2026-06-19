@@ -11,6 +11,7 @@ import androidx.navigation.fragment.findNavController
 import com.facegate.R
 import com.facegate.databinding.FragmentEnrollmentBinding
 import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * ENROLLMENT FRAGMENT

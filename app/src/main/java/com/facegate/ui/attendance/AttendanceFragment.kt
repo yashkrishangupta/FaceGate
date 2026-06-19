@@ -21,6 +21,7 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * ATTENDANCE FRAGMENT

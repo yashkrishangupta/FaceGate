@@ -10,6 +10,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import com.facegate.R
 import com.facegate.databinding.FragmentConflictQueueBinding
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Data class for a conflict record
