@@ -3,12 +3,17 @@ package com.facegate.pipeline
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.PointF
-import android.graphics.Rect
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.face.*
-import kotlinx.coroutines.tasks.await
+
 import java.util.PriorityQueue
 
+import kotlinx.coroutines.tasks.await
+
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.face.Face
+import com.google.mlkit.vision.face.FaceDetection
+import com.google.mlkit.vision.face.FaceDetector
+import com.google.mlkit.vision.face.FaceDetectorOptions
+import com.google.mlkit.vision.face.FaceLandmark
 // ATTENDANCE PIPELINE
 
 class AttendancePipeline(
