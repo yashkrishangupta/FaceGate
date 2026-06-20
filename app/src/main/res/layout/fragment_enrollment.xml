@@ -71,8 +71,8 @@
 
         <ImageView
             android:id="@+id/faceOval"
-            android:layout_width="150dp"
-            android:layout_height="195dp"
+            android:layout_width="300dp"
+            android:layout_height="400dp"
             android:layout_gravity="center"
             android:src="@drawable/oval_face_guide"
             android:contentDescription="Face guide"/>

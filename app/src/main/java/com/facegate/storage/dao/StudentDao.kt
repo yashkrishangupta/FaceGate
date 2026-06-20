@@ -11,8 +11,20 @@ interface StudentDao {
     @Insert
     suspend fun insertStudent(student: StudentEntity)
 
-    @Query("SELECT * FROM students")
+    @Query("SELECT * FROM students ORDER BY name ASC")
     suspend fun getAllStudents(): List<StudentEntity>
+
+    @Query("SELECT * FROM students WHERE studentClass = :studentClass ORDER BY name ASC")
+    suspend fun getStudentsByClass(studentClass: String): List<StudentEntity>
+
+    @Query("SELECT DISTINCT studentClass FROM students ORDER BY studentClass ASC")
+    suspend fun getAllClasses(): List<String>
+
+    @Query("SELECT COUNT(*) FROM students")
+    suspend fun getStudentCount(): Int
+
+    @Query("DELETE FROM students WHERE studentId = :studentId")
+    suspend fun deleteStudent(studentId: String)
 
     @Query("DELETE FROM students")
     suspend fun deleteAllStudents()

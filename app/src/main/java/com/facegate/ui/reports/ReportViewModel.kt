@@ -3,6 +3,7 @@ package com.facegate.ui.reports
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.facegate.storage.TemplateRepository
+import com.facegate.storage.dao.ClassAttendanceSummary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,11 +12,12 @@ import java.util.Calendar
 import javax.inject.Inject
 
 data class ReportStats(
-    val totalStudents  : Int   = 0,
-    val presentToday   : Int   = 0,
-    val absentToday    : Int   = 0,
-    val attendancePct  : String = "0%",
-    val totalRecordsEver: Int  = 0,
+    val totalStudents     : Int                       = 0,
+    val presentToday      : Int                       = 0,
+    val absentToday       : Int                       = 0,
+    val attendancePct     : String                    = "0%",
+    val totalRecordsEver  : Int                       = 0,
+    val classBreakdown    : List<ClassAttendanceSummary> = emptyList(),
 )
 
 @HiltViewModel
@@ -26,21 +28,20 @@ class ReportViewModel @Inject constructor(
     private val _stats = MutableStateFlow(ReportStats())
     val stats: StateFlow<ReportStats> = _stats
 
-    init {
-        loadStats()
-    }
+    init { loadStats() }
 
     fun loadStats() {
         viewModelScope.launch {
-            val totalStudents    = repository.getStudents().size
-            val todayStart       = getStartOfDayMillis()
-            val presentToday     = repository.getTodayAttendance(todayStart).size
+            val startOfDay       = getStartOfDay()
+            val totalStudents    = repository.getStudentCount()
+            val presentToday     = repository.getTodayAttendance(startOfDay).size
             val absentToday      = (totalStudents - presentToday).coerceAtLeast(0)
             val totalRecordsEver = repository.getAllAttendance().size
+            val classBreakdown   = repository.getClassWiseAttendance(startOfDay)
 
-            val pct = if (totalStudents > 0) {
+            val pct = if (totalStudents > 0)
                 "${((presentToday.toFloat() / totalStudents) * 100).toInt()}%"
-            } else "0%"
+            else "0%"
 
             _stats.value = ReportStats(
                 totalStudents    = totalStudents,
@@ -48,16 +49,17 @@ class ReportViewModel @Inject constructor(
                 absentToday      = absentToday,
                 attendancePct    = pct,
                 totalRecordsEver = totalRecordsEver,
+                classBreakdown   = classBreakdown,
             )
         }
     }
 
-    private fun getStartOfDayMillis(): Long {
-        val calendar = Calendar.getInstance()
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.timeInMillis
+    private fun getStartOfDay(): Long {
+        val cal = Calendar.getInstance()
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        return cal.timeInMillis
     }
 }
