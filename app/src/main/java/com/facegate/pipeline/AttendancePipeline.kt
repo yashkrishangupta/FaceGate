@@ -277,9 +277,10 @@ class AttendancePipeline(
         // Save to DB (embedding stored as comma-separated string)
         repository.addStudent(
             StudentEntity(
-                studentId = studentId,
-                name      = studentName,
-                embedding = embedding.vector.joinToString(","),
+                studentId    = studentId,
+                name         = studentName,
+                studentClass = studentClass,      // ← now saved properly
+                embedding    = embedding.vector.joinToString(","),
             )
         )
 
@@ -291,7 +292,7 @@ class AttendancePipeline(
                 embedding   = embedding.vector,
             )
         )
-
+        
         return EnrollmentResult.Success
     }
 

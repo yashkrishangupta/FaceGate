@@ -1,6 +1,7 @@
 package com.facegate.storage
 
 import com.facegate.storage.dao.AttendanceDao
+import com.facegate.storage.dao.ClassAttendanceSummary
 import com.facegate.storage.dao.ConflictDao
 import com.facegate.storage.dao.StudentDao
 import com.facegate.storage.dao.SyncLogDao
@@ -24,6 +25,17 @@ class TemplateRepository(
     suspend fun getStudents(): List<StudentEntity> =
         studentDao.getAllStudents()
 
+    suspend fun getStudentsByClass(studentClass: String): List<StudentEntity> =
+        studentDao.getStudentsByClass(studentClass)
+
+    suspend fun getAllClasses(): List<String> =
+        studentDao.getAllClasses()
+
+    suspend fun getStudentCount(): Int =
+        studentDao.getStudentCount()
+
+    suspend fun deleteStudent(studentId: String) =
+        studentDao.deleteStudent(studentId)
 
     // ── Attendance ────────────────────────────────────────────────────────────
 
@@ -36,14 +48,17 @@ class TemplateRepository(
     suspend fun markAttendanceSynced(id: Int) =
         attendanceDao.markAsSynced(id)
 
-    /** Records from today only — used by dashboard + reports */
     suspend fun getTodayAttendance(startOfDay: Long): List<AttendanceEntity> =
         attendanceDao.getTodayAttendance(startOfDay)
 
-    /** All records ever — used by reports for historical total */
     suspend fun getAllAttendance(): List<AttendanceEntity> =
         attendanceDao.getAllAttendance()
 
+    suspend fun getClassWiseAttendance(startOfDay: Long): List<ClassAttendanceSummary> =
+        attendanceDao.getClassWiseAttendance(startOfDay)
+
+    suspend fun isStudentMarkedToday(studentId: String, startOfDay: Long): Boolean =
+        attendanceDao.isStudentMarkedToday(studentId, startOfDay) > 0
 
     // ── Sync Logs ─────────────────────────────────────────────────────────────
 
@@ -52,7 +67,6 @@ class TemplateRepository(
 
     suspend fun getSyncLogs(): List<SyncLogEntity> =
         syncLogDao.getAllLogs()
-
 
     // ── Conflict Queue ────────────────────────────────────────────────────────
 

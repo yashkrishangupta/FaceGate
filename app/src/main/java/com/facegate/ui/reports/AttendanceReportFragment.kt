@@ -1,14 +1,20 @@
 package com.facegate.ui.reports
 
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.facegate.databinding.FragmentAttendanceReportBinding
+import com.facegate.storage.dao.ClassAttendanceSummary
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -31,8 +37,8 @@ class AttendanceReportFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        observeStats()
         setupClickListeners()
+        observeStats()
     }
 
     override fun onResume() {
@@ -45,40 +51,103 @@ class AttendanceReportFragment : Fragment() {
         _binding = null
     }
 
-    // ── Real DB data ─────────────────────────────────────────────────────────
+    // ── Observe real DB stats ─────────────────────────────────────────────────
 
     private fun observeStats() {
         lifecycleScope.launch {
             viewModel.stats.collect { stats ->
-                // Today's attendance percentage
+
+                // Overall today's attendance percentage
                 binding.tvMonthlyPct.text   = stats.attendancePct
 
-                // Today's present / absent
+                // Today's present / absent counts
                 binding.tvPresentCount.text = stats.presentToday.toString()
                 binding.tvAbsentCount.text  = stats.absentToday.toString()
 
-                // Top class — using total enrolled as a proxy until class-wise
-                // breakdown is available (requires class field on AttendanceEntity)
-                binding.tvTopClass.text     = "${stats.totalStudents} enrolled"
+                // Total records ever (historical)
+                binding.tvTopClass.text     = "${stats.totalRecordsEver} total records"
+
+                // Class-wise breakdown
+                buildClassBreakdown(stats.classBreakdown, stats.totalStudents)
             }
         }
     }
 
-    // ── Export (TODO when backend is ready) ──────────────────────────────────
+    // ── Class-wise breakdown rows ─────────────────────────────────────────────
 
-    private fun exportToExcel() {
-        // TODO: generate .xlsx from attendance records and share via Intent
-    }
+    private fun buildClassBreakdown(
+        breakdown     : List<ClassAttendanceSummary>,
+        totalStudents : Int,
+    ) {
+        // Only build if the container exists in the layout
+        val container = binding.classBreakdownContainer ?: return
+        container.removeAllViews()
 
-    private fun exportToPdf() {
-        // TODO: generate PDF from attendance records and share via Intent
+        if (breakdown.isEmpty()) {
+            val tv = TextView(requireContext()).apply {
+                text      = "No attendance recorded today"
+                textSize  = 13f
+                gravity   = Gravity.CENTER
+                setTextColor(Color.parseColor("#888780"))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                ).apply { topMargin = 24 }
+            }
+            container.addView(tv)
+            return
+        }
+
+        breakdown.forEach { summary ->
+            val row = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity     = Gravity.CENTER_VERTICAL
+                setPadding(0, 12, 0, 12)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                )
+            }
+
+            val classLabel = TextView(requireContext()).apply {
+                text     = "Class ${summary.studentClass}"
+                textSize = 13f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Color.parseColor("#1A202C"))
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+
+            val countLabel = TextView(requireContext()).apply {
+                text     = "${summary.presentCount} present"
+                textSize = 13f
+                setTextColor(Color.parseColor("#1D9E75"))
+                gravity  = Gravity.END
+            }
+
+            row.addView(classLabel)
+            row.addView(countLabel)
+            container.addView(row)
+
+            // Divider
+            val div = View(requireContext()).apply {
+                setBackgroundColor(Color.parseColor("#0F000000"))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 1
+                )
+            }
+            container.addView(div)
+        }
     }
 
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
             findNavController().navigateUp()
         }
-        binding.btnExportExcel.setOnClickListener { exportToExcel() }
-        binding.btnExportPdf.setOnClickListener   { exportToPdf()   }
+        binding.btnExportExcel.setOnClickListener {
+            // TODO: export when backend ready
+        }
+        binding.btnExportPdf.setOnClickListener {
+            // TODO: export when backend ready
+        }
     }
 }

@@ -16,10 +16,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    /**
-     * Provides the Room database singleton.
-     * Plain Room (no SQLCipher) matching the team's FaceGateDatabase definition.
-     */
     @Provides
     @Singleton
     fun provideFaceGateDatabase(
@@ -28,39 +24,29 @@ object AppModule {
         return Room.databaseBuilder(
             context,
             FaceGateDatabase::class.java,
-            "facegate_database"
+            "facegate_database",
         )
-            .addMigrations(FaceGateDatabase.MIGRATION_1_2)
+            // No real data yet — safe to wipe on schema change.
+            // Switch to .addMigrations(...) before production.
+            .fallbackToDestructiveMigration()
             .build()
     }
 
-    /**
-     * Provides TemplateRepository, taking 4 DAOs from the database.
-     * ConflictDao added in v2 alongside ConflictEntity / conflict_queue table.
-     */
     @Provides
     @Singleton
     fun provideTemplateRepository(
         database: FaceGateDatabase,
-    ): TemplateRepository {
-        return TemplateRepository(
-            studentDao    = database.studentDao(),
-            attendanceDao = database.attendanceDao(),
-            syncLogDao    = database.syncLogDao(),
-            conflictDao   = database.conflictDao(),  // ← added in version 2
-        )
-    }
+    ): TemplateRepository = TemplateRepository(
+        studentDao    = database.studentDao(),
+        attendanceDao = database.attendanceDao(),
+        syncLogDao    = database.syncLogDao(),
+        conflictDao   = database.conflictDao(),
+    )
 
-    /**
-     * Provides the AttendancePipeline singleton.
-     * Now takes both Context and TemplateRepository — storage is wired in.
-     */
     @Provides
     @Singleton
     fun provideAttendancePipeline(
         @ApplicationContext context: Context,
         repository: TemplateRepository,
-    ): AttendancePipeline {
-        return AttendancePipeline(context, repository)
-    }
+    ): AttendancePipeline = AttendancePipeline(context, repository)
 }
