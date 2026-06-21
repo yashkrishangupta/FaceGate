@@ -40,6 +40,8 @@ class AttendanceFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) startCamera()
         }
+    
+    private var lastState: ScanState? = null
 
     // ── LIFECYCLE ────────────────────────────────────────────────────────────
 
@@ -141,6 +143,8 @@ class AttendanceFragment : Fragment() {
     private fun observeViewModel() {
         lifecycleScope.launch {
                 viewModel.scanState.collect { state ->
+                if (state == lastState) return@collect  // skip duplicate states
+                lastState = state
                 when (state) {
                     is ScanState.Idle       -> resetToIdle()
                     is ScanState.Scanning   -> {

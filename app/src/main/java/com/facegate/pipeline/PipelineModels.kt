@@ -18,7 +18,7 @@ object PipelineConfig {
     const val FRAME_BUFFER_SIZE  = 8
 
     // ── Quality thresholds ─────────────────────────────────
-    const val MIN_FACE_SIZE_RATIO     = 0.20f
+    const val MIN_FACE_SIZE_RATIO     = 0.05f
     const val MAX_YAW_DEGREES         = 30f
     const val MAX_PITCH_DEGREES       = 20f
     const val MAX_ROLL_DEGREES        = 15f

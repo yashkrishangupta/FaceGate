@@ -30,8 +30,8 @@ hilt                 = "2.51.1"
 
 # ── ML Pipeline ───────────────────────────────────────────
 mlkitFaceDetection   = "16.1.5"
-onnxRuntime          = "1.17.0"
-opencv               = "4.5.3.0"
+onnxRuntime          = "1.19.2"
+opencv               = "4.10.0"
 
 # ── Room + SQLCipher ──────────────────────────────────────
 roomRuntime          = "2.6.1"
@@ -91,7 +91,7 @@ hilt-compiler                = { group = "com.google.dagger",           name = "
 # ── ML Pipeline ───────────────────────────────────────────
 mlkit-face-detection         = { group = "com.google.mlkit",            name = "face-detection",                   version.ref = "mlkitFaceDetection"    }
 onnxruntime-android          = { group = "com.microsoft.onnxruntime",   name = "onnxruntime-android",              version.ref = "onnxRuntime"           }
-opencv                       = { group = "com.quickbirdstudios",        name = "opencv",                           version.ref = "opencv"                }
+opencv                       = { group = "org.opencv",                  name = "opencv",                           version.ref = "opencv"                }
 
 # ── Room + SQLCipher ──────────────────────────────────────
 room-runtime                 = { group = "androidx.room",               name = "room-runtime",                     version.ref = "roomRuntime"           }

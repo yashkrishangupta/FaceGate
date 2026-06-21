@@ -152,7 +152,6 @@ class EnrollmentFragment : Fragment() {
 
                     binding.root.post {
                         viewModel.capturePhoto(bitmap, rotationDegrees)
-                        // Re-enable happens via state observer to avoid race conditions
                     }
                 }
 
