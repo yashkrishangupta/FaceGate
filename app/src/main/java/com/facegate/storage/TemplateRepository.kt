@@ -37,11 +37,15 @@ class TemplateRepository(
     suspend fun deleteStudent(studentId: String) =
         studentDao.deleteStudent(studentId)
 
+    /**
+     * Update name and class only — embedding is preserved so face recognition is unaffected.
+     */
     suspend fun updateStudentInfo(studentId: String, name: String, studentClass: String) =
         studentDao.updateStudentInfo(studentId, name, studentClass)
 
     suspend fun getStudentById(studentId: String): StudentEntity? =
         studentDao.getStudentById(studentId)
+
 
     suspend fun updateStudentRollNo(
         oldId: String,
@@ -78,6 +82,7 @@ class TemplateRepository(
     suspend fun isStudentMarkedToday(studentId: String, startOfDay: Long): Boolean =
         attendanceDao.isStudentMarkedToday(studentId, startOfDay) > 0
 
+    /** Remove today's attendance for a student (mark absent / undo). */
     suspend fun removeAttendanceToday(studentId: String, startOfDay: Long) =
         attendanceDao.deleteAttendanceToday(studentId, startOfDay)
 
@@ -118,9 +123,6 @@ class TemplateRepository(
         reason: String,
         timestamp: Long,
     ) = conflictDao.updateConflict(id, topScore, secondStudentId, secondStudentName, secondScore, reason, timestamp)
-
-    suspend fun resolveConflictsForStudent(sessionId: String, studentId: String) =
-        conflictDao.resolveConflictsForStudent(sessionId, studentId)
 
     suspend fun resolveAllConflictsForStudent(studentId: String) =
         conflictDao.resolveAllConflictsForStudent(studentId)

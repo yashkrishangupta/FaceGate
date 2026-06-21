@@ -39,10 +39,11 @@ import java.util.PriorityQueue
  *       -> DB write                           ✅ TemplateRepository
  *       -> Backend sync                       ⏳ SyncRepository (separate)
  *
- * NOTE on StudentEntity.embedding:
- *   Room stores the embedding as a String (comma-separated floats).
- *   We convert FloatArray <-> String at the storage boundary.
- *   The rest of the pipeline works with FloatArray internally.
+ * Enrollment embedding strategy:
+ *   All 5 quality-verified photos are individually embedded and then
+ *   averaged into a single 128-D vector (element-wise mean, then L2-normalised).
+ *   This blended template is far more robust than a lucky first-pass because
+ *   it captures pose, lighting, and expression variation from all five shots.
  */
 class AttendancePipeline(
     private val context: Context,
@@ -62,8 +63,6 @@ class AttendancePipeline(
     private val alreadyMarkedMap  = mutableMapOf<String, Long>()
 
     // ── In-memory template cache (loaded from DB at session start) ───────────
-    // Held in memory during session for fast cosine search (~<5ms for 500 students)
-    // Cleared at endSession() for security
     private val enrolledTemplates = mutableListOf<EnrolledTemplate>()
 
     // ── Frame buffer ─────────────────────────────────────────────────────────
@@ -80,36 +79,24 @@ class AttendancePipeline(
     private var bufferingActive = false
 
 
-    // ═════════════════════════════════════════════════════════════════════════
     // LIFECYCLE
-    // ═════════════════════════════════════════════════════════════════════════
 
-    /**
-     * Load ONNX model + warmup inference.
-     * Call once at app start from FaceGateApp or ViewModel.init block.
-     */
     suspend fun init() {
         faceEmbedder.init()
         faceEmbedder.warmup()
     }
 
-    /**
-     * Start an attendance session.
-     * Loads enrolled students from SQLite into memory and starts buffering.
-     */
     suspend fun startSession(sessionId: String) {
         this.sessionId = sessionId
         alreadyMarkedMap.clear()
         startFrameBuffering()
 
-        
         val startOfDay = System.currentTimeMillis()
-            .let { it - (it % (24 * 60 * 60 * 1000)) }   // midnight UTC
+            .let { it - (it % (24 * 60 * 60 * 1000)) }
         repository.getTodayAttendance(startOfDay).forEach { record ->
             alreadyMarkedMap[record.studentId] = record.timeStamp
         }
 
-        // Load templates from DB into in-memory list for fast search
         val students = repository.getStudents()
         enrolledTemplates.clear()
         enrolledTemplates.addAll(
@@ -124,9 +111,6 @@ class AttendancePipeline(
         )
     }
 
-    /**
-     * End the session — clears biometric data from memory immediately.
-     */
     fun endSession() {
         enrolledTemplates.clear()
         alreadyMarkedMap.clear()
@@ -135,9 +119,6 @@ class AttendancePipeline(
         sessionId = null
     }
 
-    /**
-     * Release all resources. Call from ViewModel.onCleared() / Activity.onDestroy().
-     */
     fun destroy() {
         endSession()
         faceDetector.close()
@@ -145,9 +126,7 @@ class AttendancePipeline(
     }
 
 
-    // ═════════════════════════════════════════════════════════════════════════
     // MAIN ENTRY POINT
-    // ═════════════════════════════════════════════════════════════════════════
 
     suspend fun processFrame(bitmap: Bitmap, rotationDegrees: Int = 0): PipelineFrameStatus {
         sessionId ?: return PipelineFrameStatus.NoSession
@@ -155,20 +134,17 @@ class AttendancePipeline(
 
         val uprightBitmap = rotateIfNeeded(bitmap, rotationDegrees)
 
-        // ── Stage 1: ML Kit Face Detection ───────────────────────────────────
         val tDetect = SystemClock.elapsedRealtime()
         val image   = InputImage.fromBitmap(uprightBitmap, 0)
         val faces   = faceDetector.process(image).await()
         val detectionMs = SystemClock.elapsedRealtime() - tDetect
 
-        // ── Stage 2: Face Count Check ─────────────────────────────────────────
         val rawFace: Face = when (faces.size) {
             0    -> return PipelineFrameStatus.NoFace
             1    -> faces[0]
             else -> return PipelineFrameStatus.MultipleFaces
         }
 
-        // ── Stage 3: Quality Check ────────────────────────────────────────────
         val tQuality = SystemClock.elapsedRealtime()
         val quality  = qualityChecker.check(uprightBitmap, rawFace)
         val qualityMs = SystemClock.elapsedRealtime() - tQuality
@@ -177,7 +153,6 @@ class AttendancePipeline(
             return PipelineFrameStatus.QualityFailed(quality.failReasons)
         }
 
-        // ── Stage 4: Frame Buffer ─────────────────────────────────────────────
         bufferFrame(uprightBitmap, rawFace, quality.qualityScore)
 
         if (!isBufferReady()) {
@@ -191,32 +166,26 @@ class AttendancePipeline(
         frameBuffer.clear()
         startFrameBuffering()
 
-        // ── Stage 5: Face Alignment ───────────────────────────────────────────
         val tAlign  = SystemClock.elapsedRealtime()
         val aligned = faceAligner.align(bestFrame.bitmap, bestFrame.face)
         val alignmentMs = SystemClock.elapsedRealtime() - tAlign
 
-        // AlignmentResult → AlignedFace (bridge between FaceAligner and FaceEmbedder)
         val alignedFace = AlignedFace(
             bitmap      = aligned.alignedBitmap,
             sourceFrame = bestFrame.bitmap,
         )
 
-        // ── Stage 6: Embedding ────────────────────────────────────────────────
         val embedding   = faceEmbedder.embed(alignedFace)
         val inferenceMs = embedding.inferenceTimeMs
 
-        // ── Stage 7: Similarity Search ────────────────────────────────────────
         val tSearch     = SystemClock.elapsedRealtime()
         val match       = similaritySearch.search(embedding, enrolledTemplates)
         val similarityMs = SystemClock.elapsedRealtime() - tSearch
 
-        // ── Stage 8: Decision ─────────────────────────────────────────────────
         val decision = decisionEngine.makeDecision(match, alreadyMarkedMap)
 
         val totalMs = SystemClock.elapsedRealtime() - t0
 
-        // ── Side-effects (DB write) ───────────────────────────────────────────
         handleDecision(decision)
 
         return PipelineFrameStatus.Decision(
@@ -233,14 +202,105 @@ class AttendancePipeline(
     }
 
 
-    // ═════════════════════════════════════════════════════════════════════════
-    // ENROLLMENT
-    // ═════════════════════════════════════════════════════════════════════════
+    // ENROLLMENT  — per-shot quality gate  +  averaged embedding
 
-    /**
-     * Enroll a new student.
-     * Detects, checks quality, aligns, embeds, checks duplicate, saves to DB.
-     */
+    suspend fun checkCaptureQuality(
+        bitmap: Bitmap,
+        rotationDegrees: Int = 0,
+    ): CaptureQualityResult {
+        val upright = rotateIfNeeded(bitmap, rotationDegrees)
+        val scaled  = scaleBitmapToMaxWidth(upright, 640)
+
+        val image = InputImage.fromBitmap(scaled, 0)
+        val faces = faceDetector.process(image).await()
+
+        return when (faces.size) {
+            0    -> CaptureQualityResult.Fail(CaptureRejectReason.NO_FACE)
+            1    -> {
+                val quality = qualityChecker.check(scaled, faces[0])
+                if (quality.passed) {
+                    CaptureQualityResult.Pass(scaled)
+                } else {
+                    CaptureQualityResult.Fail(
+                        reason     = CaptureRejectReason.QUALITY,
+                        failDetail = quality.failReasons,
+                    )
+                }
+            }
+            else -> CaptureQualityResult.Fail(CaptureRejectReason.MULTIPLE_FACES)
+        }
+    }
+
+    suspend fun enrollStudentFromEmbeddings(
+        studentId    : String,
+        studentName  : String,
+        studentClass : String,
+        verifiedBitmaps: List<Bitmap>,
+    ): EnrollmentResult {
+        require(verifiedBitmaps.isNotEmpty()) { "No verified bitmaps supplied" }
+
+        val vectors = mutableListOf<FloatArray>()
+
+        for (bmp in verifiedBitmaps) {
+            // Re-detect to get the Face landmark for alignment
+            val image = InputImage.fromBitmap(bmp, 0)
+            val faces = faceDetector.process(image).await()
+            val face  = faces.firstOrNull() ?: continue   // extremely unlikely after quality gate
+
+            val aligned     = faceAligner.align(bmp, face)
+            val alignedFace = AlignedFace(aligned.alignedBitmap, bmp)
+            val embedding   = faceEmbedder.embed(alignedFace)
+            vectors.add(embedding.vector)
+        }
+
+        if (vectors.isEmpty()) {
+            return EnrollmentResult.NoFaceDetected
+        }
+
+        // ── Average all vectors, then L2-normalise ────────────────────────────
+        val dim = PipelineConfig.EMBEDDING_SIZE
+        val averaged = FloatArray(dim)
+        for (vec in vectors) {
+            for (i in 0 until dim) averaged[i] += vec[i]
+        }
+        for (i in 0 until dim) averaged[i] = averaged[i] / vectors.size
+
+        val norm = Math.sqrt(averaged.map { it * it.toDouble() }.sum()).toFloat()
+            .coerceAtLeast(1e-10f)
+        val normalised = FloatArray(dim) { averaged[it] / norm }
+
+        // ── Duplicate check against in-memory templates ───────────────────────
+        val blendedEmbedding = FaceEmbedding(vector = normalised, inferenceTimeMs = 0)
+        val duplicate = similaritySearch.findDuplicateRisk(blendedEmbedding, enrolledTemplates)
+        if (duplicate != null) {
+            return EnrollmentResult.DuplicateRisk(
+                existingStudentId   = duplicate.studentId,
+                existingStudentName = duplicate.studentName,
+            )
+        }
+
+        // ── Save blended template to DB ───────────────────────────────────────
+        repository.addStudent(
+            StudentEntity(
+                studentId    = studentId,
+                name         = studentName,
+                studentClass = studentClass,
+                embedding    = normalised.joinToString(","),
+            )
+        )
+
+        // Add to in-memory cache so this session can detect them immediately
+        enrolledTemplates.add(
+            EnrolledTemplate(
+                studentId   = studentId,
+                studentName = studentName,
+                embedding   = normalised,
+            )
+        )
+
+        return EnrollmentResult.Success
+    }
+
     suspend fun enrollStudent(
         studentId   : String,
         studentName : String,
@@ -248,11 +308,9 @@ class AttendancePipeline(
         photo       : Bitmap,
         rotationDegrees: Int = 0,
     ): EnrollmentResult {
-
         val uprightPhoto = rotateIfNeeded(photo, rotationDegrees)
-        val scaledPhoto = scaleBitmapToMaxWidth(uprightPhoto, 640)
+        val scaledPhoto  = scaleBitmapToMaxWidth(uprightPhoto, 640)
 
-        // Detect face
         val image = InputImage.fromBitmap(scaledPhoto, 0)
         val faces = faceDetector.process(image).await()
 
@@ -263,18 +321,13 @@ class AttendancePipeline(
         }
         val rawFace = faces[0]
 
-        // Quality check
         val quality = qualityChecker.check(scaledPhoto, rawFace)
-        if (!quality.passed) {
-            return EnrollmentResult.QualityFailed(quality.failReasons)
-        }
+        if (!quality.passed) return EnrollmentResult.QualityFailed(quality.failReasons)
 
-        // Align + embed
         val aligned     = faceAligner.align(scaledPhoto, rawFace)
         val alignedFace = AlignedFace(aligned.alignedBitmap, scaledPhoto)
         val embedding   = faceEmbedder.embed(alignedFace)
 
-        // Duplicate check against in-memory templates
         val duplicate = similaritySearch.findDuplicateRisk(embedding, enrolledTemplates)
         if (duplicate != null) {
             return EnrollmentResult.DuplicateRisk(
@@ -283,17 +336,15 @@ class AttendancePipeline(
             )
         }
 
-        // Save to DB (embedding stored as comma-separated string)
         repository.addStudent(
             StudentEntity(
                 studentId    = studentId,
                 name         = studentName,
-                studentClass = studentClass,      
+                studentClass = studentClass,
                 embedding    = embedding.vector.joinToString(","),
             )
         )
 
-        // Add to in-memory cache so this session can detect them immediately
         enrolledTemplates.add(
             EnrolledTemplate(
                 studentId   = studentId,
@@ -301,33 +352,25 @@ class AttendancePipeline(
                 embedding   = embedding.vector,
             )
         )
-        
+
         return EnrollmentResult.Success
     }
 
-    /** How many students are loaded in the current session. */
     fun enrolledCount(): Int = enrolledTemplates.size
 
-    /** Record a manual attendance decision. */
     fun markAlreadyMarked(studentId: String, timestamp: Long = System.currentTimeMillis()) {
         alreadyMarkedMap[studentId] = timestamp
     }
 
 
-    // ═════════════════════════════════════════════════════════════════════════
     // PRIVATE HELPERS
-    // ═════════════════════════════════════════════════════════════════════════
 
-    /**
-     * Handle decision side-effects — write to DB, update in-memory state.
-     */
     private suspend fun handleDecision(decision: AttendanceDecision) {
         when (decision) {
             is AttendanceDecision.Accept -> {
                 val timestamp = System.currentTimeMillis()
                 alreadyMarkedMap[decision.studentId] = timestamp
 
-                // Write attendance record to Room
                 repository.addAttendance(
                     AttendanceEntity(
                         studentId = decision.studentId,
@@ -335,12 +378,10 @@ class AttendancePipeline(
                         synced    = false,
                     )
                 )
-
-                repository.resolveConflictsForStudent(sessionId ?: "no_session", decision.studentId)
+                repository.resolveAllConflictsForStudent(decision.studentId)
             }
             is AttendanceDecision.Ambiguous -> {
-                
-                val topId = decision.topCandidate?.studentId ?: "unknown"
+                val topId    = decision.topCandidate?.studentId ?: "unknown"
                 val existing = repository.findOpenConflict(sessionId ?: "no_session", topId)
 
                 if (existing != null) {
@@ -371,9 +412,7 @@ class AttendancePipeline(
                 }
             }
             is AttendanceDecision.Reject,
-            is AttendanceDecision.AlreadyMarked -> {
-                // No DB write needed
-            }
+            is AttendanceDecision.AlreadyMarked -> { /* no DB write needed */ }
         }
     }
 
@@ -416,7 +455,6 @@ class AttendancePipeline(
     private fun isBufferReady(): Boolean =
         frameBuffer.size >= PipelineConfig.FRAME_BUFFER_SIZE
 
-    
     private fun parseEmbedding(raw: String): FloatArray? {
         return try {
             val parts = raw.split(",")
@@ -426,4 +464,17 @@ class AttendancePipeline(
             null
         }
     }
+}
+
+// ── Capture quality result types ─────────────────────────────────────────────
+
+enum class CaptureRejectReason { NO_FACE, MULTIPLE_FACES, QUALITY }
+
+sealed class CaptureQualityResult {
+    /** Shot passed — [bitmap] is the scaled, upright version ready for embedding. */
+    data class Pass(val bitmap: Bitmap) : CaptureQualityResult()
+    data class Fail(
+        val reason     : CaptureRejectReason,
+        val failDetail : List<com.facegate.pipeline.QualityFailReason> = emptyList(),
+    ) : CaptureQualityResult()
 }
