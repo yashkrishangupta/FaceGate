@@ -40,17 +40,16 @@ class EnrollmentViewModel @Inject constructor(
 
     // ── Photo capture ────────────────────────────────────────────────────────
 
-    fun capturePhoto(bitmap: Bitmap, rotationDegrees: Int = 0): Boolean {
-
+    fun capturePhoto(bitmap: Bitmap, rotationDegrees: Int = 0) {
         viewModelScope.launch {
             val result = pipeline.checkCaptureQuality(bitmap, rotationDegrees)
             when (result) {
                 is CaptureQualityResult.Pass -> {
                     verifiedBitmaps.add(result.bitmap)
-                    _enrollmentState.value = EnrollmentState.Capturing
                     if (verifiedBitmaps.size >= 5) {
-                        // Signal Fragment to show the student-info dialog
                         _enrollmentState.value = EnrollmentState.Processing
+                    } else {
+                        _enrollmentState.value = EnrollmentState.Capturing
                     }
                 }
                 is CaptureQualityResult.Fail -> {
@@ -60,15 +59,11 @@ class EnrollmentViewModel @Inject constructor(
                         CaptureRejectReason.QUALITY        -> result.failDetail.toUserMessage()
                     }
                     _enrollmentState.value = EnrollmentState.ShotRejected(reason)
-                    // Return to Capturing state so the button stays enabled
                     _enrollmentState.value = EnrollmentState.Capturing
-                    // Recycle the raw bitmap — we won't use it
                     bitmap.recycle()
                 }
             }
         }
-        // Return current count status (Fragment uses the state flow for actual UI updates)
-        return verifiedBitmaps.size >= 5
     }
 
     fun capturedCount(): Int = verifiedBitmaps.size

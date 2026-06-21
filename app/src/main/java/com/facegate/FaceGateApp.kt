@@ -7,7 +7,6 @@ import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import org.opencv.android.OpenCVLoader
 import javax.inject.Inject
 
 
@@ -22,10 +21,11 @@ class FaceGateApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        if (!OpenCVLoader.initDebug()) {
-            Log.e("FaceGateApp", "OpenCV failed to load — alignment will crash")
-        } else {
+        try {
+            System.loadLibrary("opencv_java4")
             Log.d("FaceGateApp", "OpenCV loaded successfully")
+        } catch (e: UnsatisfiedLinkError) {
+            Log.e("FaceGateApp", "OpenCV failed to load — alignment will crash: ${e.message}")
         }
 
         appScope.launch {
