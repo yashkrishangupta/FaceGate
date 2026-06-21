@@ -51,13 +51,6 @@ interface ConflictDao {
         timestamp: Long,
     )
 
-    @Query("""
-        UPDATE conflict_queue
-        SET resolved = 1
-        WHERE sessionId = :sessionId AND topStudentId = :studentId AND resolved = 0
-    """)
-    suspend fun resolveConflictsForStudent(sessionId: String, studentId: String)
-
     @Query("UPDATE conflict_queue SET resolved = 1 WHERE topStudentId = :studentId AND resolved = 0")
     suspend fun resolveAllConflictsForStudent(studentId: String)
 
