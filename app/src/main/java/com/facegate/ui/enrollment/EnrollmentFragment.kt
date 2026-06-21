@@ -25,22 +25,12 @@ import androidx.navigation.fragment.findNavController
 import com.facegate.R
 import com.facegate.databinding.FragmentEnrollmentBinding
 import dagger.hilt.android.AndroidEntryPoint
+import com.facegate.ui.enrollment.EnrollmentEvent
 import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-/**
- * ENROLLMENT FRAGMENT
- *
- * Fixed from original stub:
- *  - Uncommented and wired to the updated ViewModel API
- *  - capturePhoto() now passes a real Bitmap (not an Int index)
- *  - enrollStudent() now collects studentName / studentId / studentClass
- *    from a dialog before calling viewModel.enrollStudent(name, id, class)
- *  - CameraX preview + ImageCapture set up properly
- *  - Camera permission requested at runtime
- *  - EnrollmentState.Failed carries a reason string — shown in tvInstSub
- */
+
 @AndroidEntryPoint
 class EnrollmentFragment : Fragment() {
 
@@ -54,9 +44,6 @@ class EnrollmentFragment : Fragment() {
     private var imageCapture: ImageCapture? = null
     private lateinit var cameraExecutor: ExecutorService
 
-    // ── Photo tracking ───────────────────────────────────────────────────────
-
-    // Driven by ViewModel now; we just mirror capturedCount() for UI
     private val totalPhotos = 5
 
     private val photoDots by lazy {
@@ -69,18 +56,19 @@ class EnrollmentFragment : Fragment() {
         )
     }
 
+    // Guard: don't show the info dialog more than once if state fires twice
+    private var infoDialogShown = false
+
     // ── Permission launcher ──────────────────────────────────────────────────
 
     private val requestCameraPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) startCamera()
-            else {
-                Toast.makeText(
-                    requireContext(),
-                    "Camera permission is required to enroll a student.",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
+            else Toast.makeText(
+                requireContext(),
+                "Camera permission is required to enroll a student.",
+                Toast.LENGTH_LONG
+            ).show()
         }
 
     // ── Lifecycle ────────────────────────────────────────────────────────────
@@ -149,30 +137,28 @@ class EnrollmentFragment : Fragment() {
 
     // ── Photo capture ─────────────────────────────────────────────────────────
 
-    /**
-     * Takes a photo via ImageCapture and hands the Bitmap to the ViewModel.
-     * When all 5 are taken, prompts for student info before enrolling.
-     */
     private fun capturePhoto() {
         val capture = imageCapture ?: return
+
+        // Disable button while the shutter + quality check is in progress
+        binding.btnCapture.isClickable = false
 
         capture.takePicture(
             cameraExecutor,
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
+                    val rotationDegrees = image.imageInfo.rotationDegrees
                     val bitmap = image.toBitmap()
                     image.close()
 
-                    // Post UI work back to main thread
                     binding.root.post {
-                        val done = viewModel.capturePhoto(bitmap)
-                        updatePhotoUI()
-                        if (done) promptStudentInfo()
+                        viewModel.capturePhoto(bitmap, rotationDegrees)
                     }
                 }
 
                 override fun onError(exc: ImageCaptureException) {
                     binding.root.post {
+                        binding.btnCapture.isClickable = true
                         Toast.makeText(
                             requireContext(),
                             "Photo capture failed: ${exc.message}",
@@ -186,12 +172,10 @@ class EnrollmentFragment : Fragment() {
 
     // ── Student info dialog ───────────────────────────────────────────────────
 
-    /**
-     * Inflates dialog_student_info.xml and collects name / ID / class
-     * before handing off to the ViewModel for enrollment.
-     * Called once all 5 photos are captured.
-     */
     private fun promptStudentInfo() {
+        if (infoDialogShown) return
+        infoDialogShown = true
+
         val dialogView = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_student_info, null)
 
@@ -201,15 +185,15 @@ class EnrollmentFragment : Fragment() {
 
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
-            .setPositiveButton("Enroll", null) // set null here, override below for validation
+            .setPositiveButton("Enroll", null)
             .setNegativeButton("Cancel") { _, _ ->
                 viewModel.reset()
+                infoDialogShown = false
                 updatePhotoUI()
             }
             .setCancelable(false)
             .create()
 
-        // Override positive button to validate before dismissing
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val name  = etName.text.toString().trim()
@@ -253,7 +237,7 @@ class EnrollmentFragment : Fragment() {
 
         binding.tvInstSub.text = when {
             photoCount >= totalPhotos -> "Saving your face data securely…"
-            else -> "We need $totalPhotos photos from different angles"
+            else -> "We need $totalPhotos clear photos from different angles"
         }
 
         photoDots.forEachIndexed { index, dot ->
@@ -267,35 +251,64 @@ class EnrollmentFragment : Fragment() {
     // ── ViewModel observer ────────────────────────────────────────────────────
 
     private fun observeViewModel() {
+        // ── One-shot shot events (never dropped) ─────────────────────────────
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.events.collect { event ->
+                when (event) {
+                    is EnrollmentEvent.ShotAccepted -> {
+                        binding.btnCapture.isClickable = true
+                        updatePhotoUI()
+                    }
+                    is EnrollmentEvent.ShotRejected -> {
+                        binding.btnCapture.isClickable = true
+                        binding.tvInstSub.text = "⚠ ${event.reason} — retake this shot"
+                        Toast.makeText(requireContext(), event.reason, Toast.LENGTH_SHORT).show()
+                        updatePhotoUI()
+                    }
+                }
+            }
+        }
+
+        // ── Persistent state ──────────────────────────────────────────────────
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.enrollmentState.collect { state ->
                 when (state) {
+
+                    is EnrollmentState.Idle -> {
+                        binding.btnCapture.isClickable = true
+                        binding.tvDuplicateWarning.visibility = View.GONE
+                        updatePhotoUI()
+                    }
+
+                    is EnrollmentState.Processing -> {
+                        binding.btnCapture.isClickable = false
+                        updatePhotoUI()
+                        promptStudentInfo()
+                    }
+
                     is EnrollmentState.Success -> {
-                        Toast.makeText(requireContext(), "Student enrolled successfully!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            "Student enrolled successfully!",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         findNavController().navigateUp()
                     }
 
                     is EnrollmentState.DuplicateFace -> {
+                        infoDialogShown = false
                         binding.tvDuplicateWarning.visibility = View.VISIBLE
                         viewModel.reset()
                         updatePhotoUI()
                     }
 
                     is EnrollmentState.Failed -> {
+                        infoDialogShown = false
                         binding.tvDuplicateWarning.visibility = View.GONE
                         binding.tvInstSub.text = state.reason
+                        binding.btnCapture.isClickable = true
                         viewModel.reset()
                         updatePhotoUI()
-                    }
-
-                    is EnrollmentState.Processing -> {
-                        binding.tvInstMain.text = "Processing enrollment…"
-                        binding.btnCapture.isClickable = false
-                    }
-
-                    is EnrollmentState.Capturing, is EnrollmentState.Idle -> {
-                        binding.btnCapture.isClickable = true
-                        binding.tvDuplicateWarning.visibility = View.GONE
                     }
                 }
             }
@@ -305,12 +318,7 @@ class EnrollmentFragment : Fragment() {
     // ── Click listeners ───────────────────────────────────────────────────────
 
     private fun setupClickListeners() {
-        binding.btnCapture.setOnClickListener {
-            capturePhoto()
-        }
-
-        binding.btnBack.setOnClickListener {
-            findNavController().navigateUp()
-        }
+        binding.btnCapture.setOnClickListener { capturePhoto() }
+        binding.btnBack.setOnClickListener { findNavController().navigateUp() }
     }
 }

@@ -39,20 +39,7 @@ class AttendanceDecisionEngine {
             )
         }
 
-        // 2. AMBIGUOUS if the top match is too close to the second match (Twin Risk).
-        // This handles cases where two students look very similar.
-        if (second != null) {
-            val similarityDifference = top.cosineSimilarity - second.cosineSimilarity
-            if (similarityDifference < AMBIGUITY_MARGIN) {
-                return AttendanceDecision.Ambiguous(
-                    topCandidate = top,
-                    secondCandidate = second,
-                    reason = "Ambiguous match: Too similar to another student (Twin risk)."
-                )
-            }
-        }
-
-        // 3. ALREADY MARKED if the student is already in the attendance list for this session.
+        // 2. ALREADY MARKED — checked BEFORE the ambiguity checks below.
         if (alreadyMarkedMap.containsKey(top.studentId)) {
             return AttendanceDecision.AlreadyMarked(
                 studentId = top.studentId,
@@ -60,20 +47,32 @@ class AttendanceDecisionEngine {
             )
         }
 
-        // 4. ACCEPT if the top similarity is above the acceptance threshold.
-        if (top.cosineSimilarity >= PipelineConfig.THRESHOLD_ACCEPT) {
-            return AttendanceDecision.Accept(
-                studentId = top.studentId,
-                studentName = top.studentName,
-                confidence = top.cosineSimilarity
+        // 3. AMBIGUOUS — two sub-cases:
+        //    a) Score is in the gray zone (0.40–0.60): not confident enough to Accept.
+        //    b) Top score is above Accept threshold but too close to second match.
+        if (top.cosineSimilarity < PipelineConfig.THRESHOLD_ACCEPT) {
+            return AttendanceDecision.Ambiguous(
+                topCandidate    = top,
+                secondCandidate = second,
+                reason          = "Low-confidence match. Please reposition your face."
             )
         }
+        if (second != null) {
+            val similarityDifference = top.cosineSimilarity - second.cosineSimilarity
+            if (similarityDifference < AMBIGUITY_MARGIN) {
+                return AttendanceDecision.Ambiguous(
+                    topCandidate    = top,
+                    secondCandidate = second,
+                    reason          = "Ambiguous match: Too similar to another student (Twin risk)."
+                )
+            }
+        }
 
-        // 5. REJECT if confidence is between the rejection and acceptance thresholds.
-        // This prompts the user to adjust their position or lighting for a better match.
-        return AttendanceDecision.Reject(
-            topSimilarity = top.cosineSimilarity,
-            reason = "Similarity score too low. Please center your face."
+        // 4. ACCEPT — score is above threshold and not ambiguous.
+        return AttendanceDecision.Accept(
+            studentId   = top.studentId,
+            studentName = top.studentName,
+            confidence  = top.cosineSimilarity
         )
     }
 }

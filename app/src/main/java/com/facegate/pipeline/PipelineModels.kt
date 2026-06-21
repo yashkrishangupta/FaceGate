@@ -18,7 +18,7 @@ object PipelineConfig {
     const val FRAME_BUFFER_SIZE  = 8
 
     // ── Quality thresholds ─────────────────────────────────
-    const val MIN_FACE_SIZE_RATIO     = 0.20f
+    const val MIN_FACE_SIZE_RATIO     = 0.05f
     const val MAX_YAW_DEGREES         = 30f
     const val MAX_PITCH_DEGREES       = 20f
     const val MAX_ROLL_DEGREES        = 15f
@@ -189,3 +189,19 @@ sealed class EnrollmentResult {
         val existingStudentName: String,
     ) : EnrollmentResult()
 }
+
+// ── Shared quality-fail → human message mapping ──────────────────────────────
+
+fun QualityFailReason.toUserMessage(): String = when (this) {
+    QualityFailReason.TOO_BLURRY               -> "Hold still — image is blurry"
+    QualityFailReason.TOO_DARK                 -> "Move to a brighter area"
+    QualityFailReason.TOO_BRIGHT               -> "Avoid direct light behind you"
+    QualityFailReason.FACE_TOO_SMALL           -> "Move closer to the camera"
+    QualityFailReason.HEAD_TURNED_YAW          -> "Face the camera directly"
+    QualityFailReason.HEAD_TILTED_PITCH        -> "Keep your head level"
+    QualityFailReason.HEAD_ROTATED_ROLL        -> "Straighten your head"
+    QualityFailReason.LOW_LANDMARK_CONFIDENCE  -> "Ensure your face is fully visible"
+}
+
+fun List<QualityFailReason>.toUserMessage(): String =
+    firstOrNull()?.toUserMessage() ?: "Photo quality too low — try again"

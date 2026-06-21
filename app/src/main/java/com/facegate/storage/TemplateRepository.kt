@@ -37,6 +37,28 @@ class TemplateRepository(
     suspend fun deleteStudent(studentId: String) =
         studentDao.deleteStudent(studentId)
 
+    /**
+     * Update name and class only — embedding is preserved so face recognition is unaffected.
+     */
+    suspend fun updateStudentInfo(studentId: String, name: String, studentClass: String) =
+        studentDao.updateStudentInfo(studentId, name, studentClass)
+
+    suspend fun getStudentById(studentId: String): StudentEntity? =
+        studentDao.getStudentById(studentId)
+
+
+    suspend fun updateStudentRollNo(
+        oldId: String,
+        newId: String,
+        name: String,
+        studentClass: String,
+    ) {
+        studentDao.updateStudentIdAndInfo(oldId, newId, name, studentClass)
+        attendanceDao.renameStudentId(oldId, newId)
+        conflictDao.renameTopStudentId(oldId, newId)
+        conflictDao.renameSecondStudentId(oldId, newId)
+    }
+
     // ── Attendance ────────────────────────────────────────────────────────────
 
     suspend fun addAttendance(record: AttendanceEntity) =
@@ -59,6 +81,10 @@ class TemplateRepository(
 
     suspend fun isStudentMarkedToday(studentId: String, startOfDay: Long): Boolean =
         attendanceDao.isStudentMarkedToday(studentId, startOfDay) > 0
+
+    /** Remove today's attendance for a student (mark absent / undo). */
+    suspend fun removeAttendanceToday(studentId: String, startOfDay: Long) =
+        attendanceDao.deleteAttendanceToday(studentId, startOfDay)
 
     // ── Sync Logs ─────────────────────────────────────────────────────────────
 
@@ -84,4 +110,20 @@ class TemplateRepository(
 
     suspend fun getUnresolvedConflictCount(): Int =
         conflictDao.getUnresolvedCount()
+
+    suspend fun findOpenConflict(sessionId: String, topStudentId: String): ConflictEntity? =
+        conflictDao.findOpenConflict(sessionId, topStudentId)
+
+    suspend fun updateConflict(
+        id: Int,
+        topScore: Float,
+        secondStudentId: String,
+        secondStudentName: String,
+        secondScore: Float,
+        reason: String,
+        timestamp: Long,
+    ) = conflictDao.updateConflict(id, topScore, secondStudentId, secondStudentName, secondScore, reason, timestamp)
+
+    suspend fun resolveAllConflictsForStudent(studentId: String) =
+        conflictDao.resolveAllConflictsForStudent(studentId)
 }

@@ -25,18 +25,7 @@ import com.facegate.databinding.FragmentAttendanceBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-/**
- * ATTENDANCE FRAGMENT
- * ====================
- * Changes from original:
- *   - ImageAnalysis added to CameraX — feeds real frames to viewModel.processFrame()
- *   - startSession() called on onResume, stopSession() on onPause
- *   - scanRunnable auto-timer removed — pipeline drives state changes now
- *   - distinctUntilChanged() prevents UI thrashing (Idle fires ~10x/sec from pipeline)
- *   - Buffering state shows frame count progress in badge
- *   - Auto-reset after Success (3s) and Failed (2s)
- *   - btnShutter now resets scan (pipeline runs continuously, no manual trigger needed)
- */
+// ATTENDANCE FRAGMENT
 @AndroidEntryPoint
 class AttendanceFragment : Fragment() {
 
@@ -51,6 +40,8 @@ class AttendanceFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) startCamera()
         }
+    
+    private var lastState: ScanState? = null
 
     // ── LIFECYCLE ────────────────────────────────────────────────────────────
 
@@ -114,9 +105,6 @@ class AttendanceFragment : Fragment() {
             preview.setSurfaceProvider(binding.cameraPreview.surfaceProvider)
 
             // ── Use case 2: ImageAnalysis (feeds frames to the ML pipeline) ───
-            // STRATEGY_KEEP_ONLY_LATEST: automatically drops frames if the pipeline
-            // is still processing the previous one — prevents frame queue buildup
-            // during the 150-400ms ML inference window.
             val imageAnalysis = ImageAnalysis.Builder()
                 .setTargetResolution(Size(640, 480))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -126,9 +114,9 @@ class AttendanceFragment : Fragment() {
             imageAnalysis.setAnalyzer(
                 ContextCompat.getMainExecutor(requireContext())
             ) { imageProxy ->
-                // Convert ImageProxy → Bitmap and pass to pipeline
+                val rotationDegrees = imageProxy.imageInfo.rotationDegrees
                 val bitmap = imageProxy.toBitmap()
-                viewModel.processFrame(bitmap)
+                viewModel.processFrame(bitmap, rotationDegrees)
                 imageProxy.close()
             }
 
@@ -155,11 +143,13 @@ class AttendanceFragment : Fragment() {
     private fun observeViewModel() {
         lifecycleScope.launch {
                 viewModel.scanState.collect { state ->
+                if (state == lastState) return@collect  // skip duplicate states
+                lastState = state
                 when (state) {
                     is ScanState.Idle       -> resetToIdle()
                     is ScanState.Scanning   -> {
                         handler.removeCallbacksAndMessages(null)
-                        showScanningState()
+                        showScanningState(state.message)
                     }
                     is ScanState.Processing -> {
                         handler.removeCallbacksAndMessages(null)
@@ -172,7 +162,7 @@ class AttendanceFragment : Fragment() {
                     }
                     is ScanState.Failed     -> {
                         handler.removeCallbacksAndMessages(null)
-                        showFailState()
+                        showFailState(state.title, state.message)
                         handler.postDelayed({ viewModel.resetScan() }, 2000)
                     }
                 }
@@ -191,16 +181,18 @@ class AttendanceFragment : Fragment() {
         binding.tvStatusMain.text  = "Place your face inside the oval"
         binding.tvStatusSub.text   = "Keep your face centered and look straight"
         binding.processingDots.visibility = View.GONE
-        binding.scanLine.visibility = View.GONE
+        binding.scanLine.visibility       = View.GONE
+        binding.btnRetry.visibility       = View.INVISIBLE
     }
 
-    private fun showScanningState() {
+    private fun showScanningState(message: String) {
         binding.faceOval.setImageResource(R.drawable.oval_face_scanning)
         binding.tvScanBadge.text   = "Face detected"
         binding.tvStatusLabel.text = "SCANNING"
-        binding.tvStatusMain.text  = "Hold still — scanning…"
+        binding.tvStatusMain.text  = message
         binding.tvStatusSub.text   = "Analyzing facial features"
         binding.processingDots.visibility = View.GONE
+        binding.btnRetry.visibility       = View.INVISIBLE
 
         // Only start animation if not already running — prevents jitter
         if (binding.scanLine.animation == null) {
@@ -219,6 +211,7 @@ class AttendanceFragment : Fragment() {
         binding.tvStatusMain.text  = "Identifying student…"
         binding.tvStatusSub.text   = "Matching against database"
         binding.processingDots.visibility = View.VISIBLE
+        binding.btnRetry.visibility       = View.INVISIBLE
         animateProcessingDots()
     }
 
@@ -231,17 +224,19 @@ class AttendanceFragment : Fragment() {
         binding.tvStatusMain.text  = "Attendance Marked!"
         binding.tvStatusSub.text   = "${state.studentName} — ${state.studentClass}"
         binding.processingDots.visibility = View.GONE
+        binding.btnRetry.visibility       = View.INVISIBLE
     }
 
-    private fun showFailState() {
+    private fun showFailState(title: String, message: String) {
         binding.scanLine.clearAnimation()
         binding.scanLine.visibility = View.GONE
         binding.faceOval.setImageResource(R.drawable.oval_face_fail)
         binding.tvScanBadge.text   = "Not Recognized"
         binding.tvStatusLabel.text = "FAILED"
-        binding.tvStatusMain.text  = "Face Not Recognized"
-        binding.tvStatusSub.text   = "Please try again"
+        binding.tvStatusMain.text  = title
+        binding.tvStatusSub.text   = message
         binding.processingDots.visibility = View.GONE
+        binding.btnRetry.visibility       = View.VISIBLE
     }
 
     // ── PROCESSING DOTS ANIMATION ────────────────────────────────────────────
@@ -250,7 +245,7 @@ class AttendanceFragment : Fragment() {
         val dots = listOf(binding.dot1, binding.dot2, binding.dot3)
         dots.forEachIndexed { index, dot ->
             handler.postDelayed({
-                if (_binding == null) return@postDelayed  // guard against destroyed view
+                if (_binding == null) return@postDelayed  
                 dot.animate()
                     .alpha(1f).scaleX(1.2f).scaleY(1.2f)
                     .setDuration(400)
