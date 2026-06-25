@@ -9,7 +9,6 @@ import kotlin.math.abs
 
 /**
  * Runs 5 quality checks on every camera frame before the embedding step.
- * Uses PipelineConfig thresholds and PipelineModels types — Yash's shared contract.
  *
  * Usage:
  * ```
@@ -21,7 +20,14 @@ import kotlin.math.abs
  */
 class QualityChecker {
 
-    fun check(bitmap: Bitmap, face: Face, skipPoseCheck: Boolean = false): QualityResult {
+    /**
+     * @param poseToleranceMultiplier Multiplies MAX_YAW/PITCH/ROLL_DEGREES
+     *   before gating. 1.0 = normal (attendance) limits. Enrollment passes a
+     *   higher value (see PipelineConfig.ENROLLMENT_POSE_TOLERANCE_MULTIPLIER)
+     *   since shots 2-5 deliberately ask for "slightly" turned/tilted angles
+     *   that would otherwise always exceed the strict attendance limits.
+     */
+    fun check(bitmap: Bitmap, face: Face, poseToleranceMultiplier: Float = 1.0f): QualityResult {
         val failReasons = mutableListOf<QualityFailReason>()
 
         // ── Check 1: Blur ──────────────────────────────────────────────
@@ -48,18 +54,17 @@ class QualityChecker {
         }
 
         // ── Check 4: Head pose ─────────────────────────────────────────
-        // Skipped during enrollment — shots 2-5 deliberately ask for
-        // varied angles (left, right, up, down) which would otherwise
-        // always exceed these thresholds and reject every angled shot.
         val yaw   = face.headEulerAngleY
         val pitch = face.headEulerAngleX
         val roll  = face.headEulerAngleZ
 
-        if (!skipPoseCheck) {
-            if (abs(yaw)   > PipelineConfig.MAX_YAW_DEGREES)   failReasons.add(QualityFailReason.HEAD_TURNED_YAW)
-            if (abs(pitch) > PipelineConfig.MAX_PITCH_DEGREES) failReasons.add(QualityFailReason.HEAD_TILTED_PITCH)
-            if (abs(roll)  > PipelineConfig.MAX_ROLL_DEGREES)  failReasons.add(QualityFailReason.HEAD_ROTATED_ROLL)
-        }
+        val maxYaw   = PipelineConfig.MAX_YAW_DEGREES   * poseToleranceMultiplier
+        val maxPitch = PipelineConfig.MAX_PITCH_DEGREES * poseToleranceMultiplier
+        val maxRoll  = PipelineConfig.MAX_ROLL_DEGREES  * poseToleranceMultiplier
+
+        if (abs(yaw)   > maxYaw)   failReasons.add(QualityFailReason.HEAD_TURNED_YAW)
+        if (abs(pitch) > maxPitch) failReasons.add(QualityFailReason.HEAD_TILTED_PITCH)
+        if (abs(roll)  > maxRoll)  failReasons.add(QualityFailReason.HEAD_ROTATED_ROLL)
 
         // ── Check 5: Landmark confidence ───────────────────────────────
         val landmarkCount      = face.allLandmarks.size

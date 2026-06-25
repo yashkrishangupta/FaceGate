@@ -27,6 +27,8 @@ object PipelineConfig {
     const val MIN_BRIGHTNESS          = 60f
     const val MAX_BRIGHTNESS          = 220f
 
+    const val ENROLLMENT_POSE_TOLERANCE_MULTIPLIER = 1.5f
+
     // ── Similarity thresholds ──────────────────────────────
     const val THRESHOLD_ACCEPT    = 0.60f
     const val THRESHOLD_REJECT    = 0.40f

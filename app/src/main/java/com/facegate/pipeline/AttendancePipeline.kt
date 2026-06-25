@@ -220,7 +220,12 @@ class AttendancePipeline(
         return when (faces.size) {
             0    -> CaptureQualityResult.Fail(CaptureRejectReason.NO_FACE)
             1    -> {
-                val quality = qualityChecker.check(scaled, faces[0], skipPoseCheck = forEnrollment)
+                val quality = qualityChecker.check(
+                    scaled,
+                    faces[0],
+                    poseToleranceMultiplier = if (forEnrollment)
+                        PipelineConfig.ENROLLMENT_POSE_TOLERANCE_MULTIPLIER else 1.0f,
+                )
                 if (quality.passed) {
                     CaptureQualityResult.Pass(scaled)
                 } else {
@@ -242,7 +247,8 @@ class AttendancePipeline(
     ): EnrollmentResult {
         require(verifiedBitmaps.isNotEmpty()) { "No verified bitmaps supplied" }
 
-        val vectors = mutableListOf<FloatArray>()
+        data class CapturedEmbedding(val vector: FloatArray, val landmarksFound: Boolean)
+        val captured = mutableListOf<CapturedEmbedding>()
 
         for (bmp in verifiedBitmaps) {
             // Re-detect to get the Face landmark for alignment
@@ -253,12 +259,16 @@ class AttendancePipeline(
             val aligned     = faceAligner.align(bmp, face)
             val alignedFace = AlignedFace(aligned.alignedBitmap, bmp)
             val embedding   = faceEmbedder.embed(alignedFace)
-            vectors.add(embedding.vector)
+            captured.add(CapturedEmbedding(embedding.vector, aligned.landmarksFound))
         }
 
-        if (vectors.isEmpty()) {
+        if (captured.isEmpty()) {
             return EnrollmentResult.NoFaceDetected
         }
+
+        val landmarkAligned = captured.filter { it.landmarksFound }
+        val vectors = (if (landmarkAligned.isNotEmpty()) landmarkAligned else captured)
+            .map { it.vector }
 
         // ── Average all vectors, then L2-normalise ────────────────────────────
         val dim = PipelineConfig.EMBEDDING_SIZE

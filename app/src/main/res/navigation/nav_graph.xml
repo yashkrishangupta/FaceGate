@@ -113,4 +113,34 @@
         android:label="Conflict Queue"
         tools:layout="@layout/fragment_conflict_queue" />
 
+    <!-- New destinations -->
+    <fragment android:id="@+id/timetableSetupFragment"
+        android:name="com.facegate.ui.admin.TimetableSetupFragment"/>
+
+    <fragment android:id="@+id/changesLogFragment"
+        android:name="com.facegate.ui.admin.ChangesLogFragment"/>
+
+    <fragment android:id="@+id/holidaySetupFragment"
+        android:name="com.facegate.ui.admin.HolidaySetupFragment"/>
+
+    <fragment android:id="@+id/todayScheduleFragment"
+        android:name="com.facegate.ui.schedule.TodayScheduleFragment">
+        <action android:id="@+id/action_schedule_to_attendance"
+            app:destination="@id/attendanceFragment"/>
+    </fragment>
+
+    <!-- Args on attendanceFragment -->
+    <fragment android:id="@+id/attendanceFragment" ...>
+        <argument android:name="sessionId"      app:argType="string"  android:defaultValue=""/>
+        <argument android:name="subject"        app:argType="string"  android:defaultValue=""/>
+        <argument android:name="batch"          app:argType="string"  android:defaultValue=""/>
+        <argument android:name="windowMinutes"  app:argType="integer" android:defaultValue="10"/>
+    </fragment>
+
+    <!-- Actions from dashboard -->
+    <action android:id="@+id/action_dashboard_to_timetableSetup" app:destination="@id/timetableSetupFragment"/>
+    <action android:id="@+id/action_dashboard_to_holidaySetup"   app:destination="@id/holidaySetupFragment"/>
+    <action android:id="@+id/action_dashboard_to_changesLog"     app:destination="@id/changesLogFragment"/>
+    <action android:id="@+id/action_dashboard_to_schedule"       app:destination="@id/todayScheduleFragment"/>
+
 </navigation>
