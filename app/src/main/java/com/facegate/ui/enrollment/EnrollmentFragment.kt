@@ -297,9 +297,6 @@ class EnrollmentFragment : Fragment() {
 
                     is EnrollmentState.DuplicateFace -> {
                         infoDialogShown = false
-                        binding.tvDuplicateWarning.visibility = View.VISIBLE
-                        viewModel.reset()
-                        updatePhotoUI()
                     }
 
                     is EnrollmentState.Failed -> {

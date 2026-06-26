@@ -20,7 +20,6 @@ sealed class EnrollmentState {
     object Idle          : EnrollmentState()
     object Processing    : EnrollmentState()
     object Success       : EnrollmentState()
-    object DuplicateFace : EnrollmentState()
     data class Failed(val reason: String = "Please try again") : EnrollmentState()
 }
 
@@ -111,7 +110,6 @@ class EnrollmentViewModel @Inject constructor(
 
             _enrollmentState.value = when (result) {
                 is EnrollmentResult.Success               -> EnrollmentState.Success
-                is EnrollmentResult.DuplicateRisk         -> EnrollmentState.DuplicateFace
                 is EnrollmentResult.NoFaceDetected        -> EnrollmentState.Failed(
                     "No face detected in photos. Retake with good lighting."
                 )

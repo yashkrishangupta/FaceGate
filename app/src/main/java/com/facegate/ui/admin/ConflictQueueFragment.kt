@@ -107,7 +107,6 @@ class ConflictQueueFragment : Fragment() {
 
         // Avatar — initials from topStudentName
         val initials = conflict.topStudentName
-            ?.split(" ")
             ?.mapNotNull { it.firstOrNull()?.toString() }
             ?.take(2)
             ?.joinToString("") ?: "??"
@@ -133,7 +132,6 @@ class ConflictQueueFragment : Fragment() {
         }
 
         val nameText = TextView(requireContext()).apply {
-            text     = conflict.topStudentName ?: "Unknown Student"
             textSize = 14f
             typeface = android.graphics.Typeface.DEFAULT_BOLD
             setTextColor(android.graphics.Color.parseColor("#1A202C"))
@@ -141,11 +139,6 @@ class ConflictQueueFragment : Fragment() {
 
         // Show both candidates if available
         val reasonText = TextView(requireContext()).apply {
-            val scoreInfo = if (conflict.topScore != null && conflict.secondStudentName != null) {
-                "vs ${conflict.secondStudentName} (${String.format("%.2f", conflict.topScore)})"
-            } else {
-                conflict.reason ?: "Ambiguous match"
-            }
             text     = scoreInfo
             textSize = 11f
             setTextColor(android.graphics.Color.parseColor("#888780"))
@@ -204,22 +197,10 @@ class ConflictQueueFragment : Fragment() {
         }
     }
 
-    /**
-     * Bug fix: the Resolve button used to silently mark the conflict resolved
-     * with no record of the outcome. Now it asks the admin explicitly whether
-     * the flagged person should be marked Present or left Absent.
-     */
     private fun showResolveDialog(conflict: ConflictEntity) {
         AlertDialog.Builder(requireContext())
-            .setTitle(conflict.topStudentName ?: "Unknown Student")
-            .setMessage("Mark this person present or absent for today?")
-            .setPositiveButton("Mark Present") { _, _ ->
-                viewModel.resolveConflict(conflict, markPresent = true)
             }
-            .setNegativeButton("Mark Absent") { _, _ ->
-                viewModel.resolveConflict(conflict, markPresent = false)
             }
-            .setNeutralButton("Cancel", null)
             .show()
     }
 

@@ -44,33 +44,18 @@ class ConflictQueueViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Resolve a conflict with the admin's explicit decision, instead of
-     * silently marking it resolved with no record of what happened.
-     *
-     * @param markPresent true → mark [conflict.topStudentId] present today.
-     *                    false → leave them absent (no attendance record);
-     *                    just clear the conflict from the queue.
-     */
-    fun resolveConflict(conflict: ConflictEntity, markPresent: Boolean) {
         viewModelScope.launch {
-            if (markPresent) {
                 val startOfDay = getStartOfDay()
                 val timestamp = System.currentTimeMillis()
-                if (!repository.isStudentMarkedToday(conflict.topStudentId, startOfDay)) {
                     repository.addAttendance(
                         AttendanceEntity(
-                            studentId = conflict.topStudentId,
                             timeStamp = timestamp,
                             synced    = false,
                         )
                     )
                 }
-
-                pipeline.markAlreadyMarked(conflict.topStudentId, timestamp)
             }
 
-            repository.resolveAllConflictsForStudent(conflict.topStudentId)
             repository.resolveConflict(conflict.id)
 
             loadConflicts() 

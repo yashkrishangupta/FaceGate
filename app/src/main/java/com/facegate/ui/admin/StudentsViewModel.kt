@@ -43,7 +43,6 @@ class StudentsViewModel @Inject constructor(
 
     fun deleteStudent(studentId: String) {
         viewModelScope.launch {
-            repository.deleteStudent(studentId)
             loadStudents()
         }
     }

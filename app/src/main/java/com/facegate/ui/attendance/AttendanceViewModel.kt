@@ -175,7 +175,6 @@ class AttendanceViewModel @Inject constructor(
         QualityFailReason.LOW_LANDMARK_CONFIDENCE -> "Can't see your face clearly — adjust position"
     }
 
-    /** Picks the most relevant single reason to show; falls back to the generic copy. */
     private fun List<QualityFailReason>.toDisplayMessage(): String =
         firstOrNull()?.toMessage() ?: "Hold still — scanning…"
 
