@@ -5,9 +5,8 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/adminDashboard">
 
-    <!-- ═══════════════════════════════════════
-         ADMIN DASHBOARD — Home Screen
-    ═══════════════════════════════════════ -->
+    <!-- ========================= Dashboard ========================= -->
+
     <fragment
         android:id="@+id/adminDashboard"
         android:name="com.facegate.ui.admin.AdminDashboard"
@@ -34,20 +33,56 @@
             android:id="@+id/action_dashboard_to_conflicts"
             app:destination="@id/conflictQueueFragment" />
 
+        <action
+            android:id="@+id/action_dashboard_to_timetableSetup"
+            app:destination="@id/timetableSetupFragment" />
+
+        <action
+            android:id="@+id/action_dashboard_to_holidaySetup"
+            app:destination="@id/holidaySetupFragment" />
+
+        <action
+            android:id="@+id/action_dashboard_to_changesLog"
+            app:destination="@id/changesLogFragment" />
+
+        <action
+            android:id="@+id/action_dashboard_to_schedule"
+            app:destination="@id/todayScheduleFragment" />
+
     </fragment>
 
-    <!-- ═══════════════════════════════════════
-         ATTENDANCE FRAGMENT — Camera Screen
-    ═══════════════════════════════════════ -->
+    <!-- ========================= Attendance ========================= -->
+
     <fragment
         android:id="@+id/attendanceFragment"
         android:name="com.facegate.ui.attendance.AttendanceFragment"
         android:label="Attendance"
-        tools:layout="@layout/fragment_attendance" />
+        tools:layout="@layout/fragment_attendance">
 
-    <!-- ═══════════════════════════════════════
-         ENROLLMENT FRAGMENT
-    ═══════════════════════════════════════ -->
+        <argument
+            android:name="sessionId"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <argument
+            android:name="subject"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <argument
+            android:name="batch"
+            app:argType="string"
+            android:defaultValue="" />
+
+        <argument
+            android:name="windowMinutes"
+            app:argType="integer"
+            android:defaultValue="10" />
+
+    </fragment>
+
+    <!-- ========================= Enrollment ========================= -->
+
     <fragment
         android:id="@+id/enrollmentFragment"
         android:name="com.facegate.ui.enrollment.EnrollmentFragment"
@@ -62,9 +97,8 @@
 
     </fragment>
 
-    <!-- ═══════════════════════════════════════
-         STUDENTS FRAGMENT — Manage Students
-    ═══════════════════════════════════════ -->
+    <!-- ========================= Students ========================= -->
+
     <fragment
         android:id="@+id/studentsFragment"
         android:name="com.facegate.ui.admin.StudentsFragment"
@@ -77,70 +111,70 @@
 
     </fragment>
 
-    <!-- ═══════════════════════════════════════
-         MANUAL ATTENDANCE FRAGMENT
-    ═══════════════════════════════════════ -->
+    <!-- ========================= Manual Attendance ========================= -->
+
     <fragment
         android:id="@+id/manualAttendanceFragment"
         android:name="com.facegate.ui.admin.ManualAttendanceFragment"
         android:label="Manual Attendance"
         tools:layout="@layout/fragment_manual_attendance" />
 
-    <!-- ═══════════════════════════════════════
-         HOLIDAYS FRAGMENT
-    ═══════════════════════════════════════ -->
+    <!-- ========================= Holidays ========================= -->
+
     <fragment
         android:id="@+id/holidaysFragment"
         android:name="com.facegate.ui.admin.HolidaysFragment"
         android:label="Holidays"
         tools:layout="@layout/fragment_holidays" />
 
-    <!-- ═══════════════════════════════════════
-         ATTENDANCE REPORT FRAGMENT
-    ═══════════════════════════════════════ -->
+    <!-- ========================= Reports ========================= -->
+
     <fragment
         android:id="@+id/attendanceReportFragment"
         android:name="com.facegate.ui.reports.AttendanceReportFragment"
         android:label="Reports"
         tools:layout="@layout/fragment_attendance_report" />
 
-    <!-- ═══════════════════════════════════════
-         CONFLICT QUEUE FRAGMENT
-    ═══════════════════════════════════════ -->
+    <!-- ========================= Conflicts ========================= -->
+
     <fragment
         android:id="@+id/conflictQueueFragment"
         android:name="com.facegate.ui.admin.ConflictQueueFragment"
         android:label="Conflict Queue"
         tools:layout="@layout/fragment_conflict_queue" />
 
-    <!-- New destinations -->
-    <fragment android:id="@+id/timetableSetupFragment"
-        android:name="com.facegate.ui.admin.TimetableSetupFragment"/>
+    <!-- ========================= Timetable ========================= -->
 
-    <fragment android:id="@+id/changesLogFragment"
-        android:name="com.facegate.ui.admin.ChangesLogFragment"/>
+    <fragment
+        android:id="@+id/timetableSetupFragment"
+        android:name="com.facegate.ui.admin.TimetableSetupFragment"
+        android:label="Timetable" />
 
-    <fragment android:id="@+id/holidaySetupFragment"
-        android:name="com.facegate.ui.admin.HolidaySetupFragment"/>
+    <!-- ========================= Changes Log ========================= -->
 
-    <fragment android:id="@+id/todayScheduleFragment"
-        android:name="com.facegate.ui.schedule.TodayScheduleFragment">
-        <action android:id="@+id/action_schedule_to_attendance"
-            app:destination="@id/attendanceFragment"/>
+    <fragment
+        android:id="@+id/changesLogFragment"
+        android:name="com.facegate.ui.admin.ChangesLogFragment"
+        android:label="Changes Log" />
+
+    <!-- ========================= Holiday Setup ========================= -->
+
+    <fragment
+        android:id="@+id/holidaySetupFragment"
+        android:name="com.facegate.ui.admin.HolidaySetupFragment"
+        android:label="Holiday Setup" />
+
+    <!-- ========================= Today's Schedule ========================= -->
+
+    <fragment
+        android:id="@+id/todayScheduleFragment"
+        android:name="com.facegate.ui.schedule.TodayScheduleFragment"
+        android:label="Today's Schedule">
+
+        <action
+            android:id="@+id/action_schedule_to_attendance"
+            app:destination="@id/attendanceFragment" />
+
     </fragment>
-
-    <!-- Args on attendanceFragment -->
-    <fragment android:id="@+id/attendanceFragment" ...>
-        <argument android:name="sessionId"      app:argType="string"  android:defaultValue=""/>
-        <argument android:name="subject"        app:argType="string"  android:defaultValue=""/>
-        <argument android:name="batch"          app:argType="string"  android:defaultValue=""/>
-        <argument android:name="windowMinutes"  app:argType="integer" android:defaultValue="10"/>
-    </fragment>
-
-    <!-- Actions from dashboard -->
-    <action android:id="@+id/action_dashboard_to_timetableSetup" app:destination="@id/timetableSetupFragment"/>
-    <action android:id="@+id/action_dashboard_to_holidaySetup"   app:destination="@id/holidaySetupFragment"/>
-    <action android:id="@+id/action_dashboard_to_changesLog"     app:destination="@id/changesLogFragment"/>
-    <action android:id="@+id/action_dashboard_to_schedule"       app:destination="@id/todayScheduleFragment"/>
 
 </navigation>

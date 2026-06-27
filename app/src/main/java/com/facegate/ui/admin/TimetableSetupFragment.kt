@@ -1,15 +1,15 @@
-package com.facegate.ui.schedule
+package com.facegate.ui.admin
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.facegate.databinding.FragmentTodayScheduleBinding
+import com.facegate.databinding.FragmentTimetableSetupBinding
 
-class TodayScheduleFragment : Fragment() {
+class TimetableSetupFragment : Fragment() {
 
-    private var _binding: FragmentTodayScheduleBinding? = null
+    private var _binding: FragmentTimetableSetupBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -18,7 +18,7 @@ class TodayScheduleFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
-        _binding = FragmentTodayScheduleBinding.inflate(inflater, container, false)
+        _binding = FragmentTimetableSetupBinding.inflate(inflater, container, false)
 
         return binding.root
     }
