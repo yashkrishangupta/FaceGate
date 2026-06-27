@@ -5,9 +5,15 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "attendance_records")
 data class AttendanceEntity(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val studentId : String,
-    val sessionId : String? = null,
-    val timeStamp : Long,
-    val synced    : Boolean = false,
+
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+
+    val studentId: String,
+
+    val sessionId: String? = null,
+
+    val timeStamp: Long,
+
+    val synced: Boolean = false
 )

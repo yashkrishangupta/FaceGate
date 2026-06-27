@@ -44,21 +44,22 @@ class ConflictQueueViewModel @Inject constructor(
         }
     }
 
+    fun resolveConflict(conflict: ConflictEntity) {
         viewModelScope.launch {
-                val startOfDay = getStartOfDay()
-                val timestamp = System.currentTimeMillis()
-                    repository.addAttendance(
-                        AttendanceEntity(
-                            timeStamp = timestamp,
-                            synced    = false,
-                        )
-                    )
-                }
-            }
+
+            val timestamp = System.currentTimeMillis()
+
+            repository.addAttendance(
+                AttendanceEntity(
+                    studentId = conflict.topStudentId,
+                    timeStamp = timestamp,
+                    synced = false
+                )
+            )
 
             repository.resolveConflict(conflict.id)
 
-            loadConflicts() 
+            loadConflicts()
         }
     }
 

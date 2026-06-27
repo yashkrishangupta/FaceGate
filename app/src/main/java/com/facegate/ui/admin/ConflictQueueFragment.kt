@@ -107,10 +107,11 @@ class ConflictQueueFragment : Fragment() {
 
         // Avatar — initials from topStudentName
         val initials = conflict.topStudentName
-            ?.mapNotNull { it.firstOrNull()?.toString() }
+            ?.split(" ")
+            ?.map { it.first().toString() }
             ?.take(2)
-            ?.joinToString("") ?: "??"
-
+            ?.joinToString("")
+            ?: "??"
         val avatar = TextView(requireContext()).apply {
             text     = initials
             textSize = 13f
@@ -135,6 +136,13 @@ class ConflictQueueFragment : Fragment() {
             textSize = 14f
             typeface = android.graphics.Typeface.DEFAULT_BOLD
             setTextColor(android.graphics.Color.parseColor("#1A202C"))
+        }
+        val scoreInfo = buildString {
+            append("Top Match: ${conflict.topStudentName}")
+
+            if (!conflict.secondStudentName.isNullOrBlank()) {
+                append("\nSecond Match: ${conflict.secondStudentName}")
+            }
         }
 
         // Show both candidates if available
@@ -198,9 +206,14 @@ class ConflictQueueFragment : Fragment() {
     }
 
     private fun showResolveDialog(conflict: ConflictEntity) {
+
         AlertDialog.Builder(requireContext())
+            .setTitle("Resolve Conflict")
+            .setMessage("Resolve conflict for ${conflict.topStudentName}?")
+            .setPositiveButton("Resolve") { _, _ ->
+                // TODO: Resolve conflict here
             }
-            }
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
