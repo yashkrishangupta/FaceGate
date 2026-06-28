@@ -1,93 +1,196 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="#12121C"
-    android:padding="20dp">
+    android:fillViewport="true"
+    android:background="#10141F">
 
-    <!-- Title -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="STUDENT DETAILS"
-        android:textColor="#B5D4F4"
-        android:textSize="11sp"
-        android:textStyle="bold"
-        android:letterSpacing="0.15"
-        android:layout_marginBottom="16dp"/>
-
-    <!-- Full Name -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Full Name"
-        android:textColor="#6BFFFFFF"
-        android:textSize="12sp"
-        android:layout_marginBottom="4dp"/>
-
-    <EditText
-        android:id="@+id/etStudentName"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:hint="e.g. Arjun Kumar"
-        android:textColorHint="#44FFFFFF"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:background="#1E1E2E"
-        android:inputType="textPersonName|textCapWords"
-        android:maxLines="1"
-        android:layout_marginBottom="12dp"/>
-
-    <!-- Student ID -->
-    <TextView
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Roll Number / ID"
-        android:textColor="#6BFFFFFF"
-        android:textSize="12sp"
-        android:layout_marginBottom="4dp"/>
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <EditText
-        android:id="@+id/etStudentId"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:hint="e.g. S001"
-        android:textColorHint="#44FFFFFF"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:background="#1E1E2E"
-        android:inputType="textNoSuggestions"
-        android:maxLines="1"
-        android:layout_marginBottom="12dp"/>
+        <!-- Avatar -->
 
-    <!-- Class / Section -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Class / Section"
-        android:textColor="#6BFFFFFF"
-        android:textSize="12sp"
-        android:layout_marginBottom="4dp"/>
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_gravity="center"
+            android:background="@drawable/badge_blue"
+            android:padding="18dp"
+            android:src="@android:drawable/ic_menu_myplaces"
+            app:tint="#5DA9FF" />
 
-    <EditText
-        android:id="@+id/etStudentClass"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:hint="e.g. 9-B"
-        android:textColorHint="#44FFFFFF"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:background="#1E1E2E"
-        android:inputType="textNoSuggestions"
-        android:maxLines="1"
-        android:layout_marginBottom="4dp"/>
+        <!-- Title -->
 
-</LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="18dp"
+            android:text="Add New Student"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="24dp"
+            android:text="Student Information"
+            android:textColor="#8EA3B7"
+            android:textSize="13sp" />
+
+        <!-- Step -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:text="STEP 1 OF 2"
+            android:textColor="#5DA9FF"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <!-- Student Name -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Student Name"
+            android:textColor="#D7E4F5"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etStudentName"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="18dp"
+            android:background="@drawable/edittext_dark"
+            android:drawableStart="@android:drawable/ic_menu_myplaces"
+            android:drawablePadding="12dp"
+            android:hint="Enter full name"
+            android:imeOptions="actionNext"
+            android:inputType="textPersonName|textCapWords"
+            android:paddingHorizontal="18dp"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#708090" />
+
+        <!-- Roll Number -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Roll Number / ID"
+            android:textColor="#D7E4F5"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etStudentId"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="18dp"
+            android:background="@drawable/edittext_dark"
+            android:drawableStart="@android:drawable/ic_menu_edit"
+            android:drawablePadding="12dp"
+            android:hint="e.g. 22103045"
+            android:imeOptions="actionNext"
+            android:inputType="text"
+            android:paddingHorizontal="18dp"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#708090" />
+
+        <!-- Class -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Class / Section"
+            android:textColor="#D7E4F5"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etStudentClass"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/edittext_dark"
+            android:drawableStart="@android:drawable/ic_menu_agenda"
+            android:drawablePadding="12dp"
+            android:hint="e.g. CSE-3"
+            android:imeOptions="actionDone"
+            android:inputType="text"
+            android:paddingHorizontal="18dp"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#708090" />
+
+        <!-- Information -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_marginEnd="8dp"
+                android:src="@android:drawable/ic_dialog_info"
+                app:tint="#5DA9FF" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="After saving these details, you'll capture 5 face images for enrollment."
+                android:textColor="#7A8799"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <!-- Buttons -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnCancel"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@drawable/button_outline"
+                android:text="Cancel"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF" />
+
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="1dp" />
+
+            <Button
+                android:id="@+id/btnContinue"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@drawable/button_primary"
+                android:text="Continue"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
