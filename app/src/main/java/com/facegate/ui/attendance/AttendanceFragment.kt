@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.facegate.R
 import com.facegate.databinding.FragmentAttendanceBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,6 +34,8 @@ class AttendanceFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: AttendanceViewModel by viewModels()
+
+    private val args by navArgs<AttendanceFragmentArgs>()
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -60,6 +63,10 @@ class AttendanceFragment : Fragment() {
         observeViewModel()
         resetToIdle()
 
+        // Session args now come from TodayScheduleFragment via nav args,
+        // not generated inside the ViewModel.
+        viewModel.startSession(args.sessionId, args.subject, args.batch, args.windowMinutes)
+
         if (ContextCompat.checkSelfPermission(
                 requireContext(), Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED
@@ -72,9 +79,6 @@ class AttendanceFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Start session every time the screen becomes active.
-        // This loads enrolled students from DB into the pipeline's memory.
-        viewModel.startSession()
         resetToIdle()
     }
 
@@ -168,6 +172,29 @@ class AttendanceFragment : Fragment() {
                 }
             }
         }
+
+        lifecycleScope.launch {
+            viewModel.windowCountdown.collect { remainingMs ->
+                updateCountdown(remainingMs)
+            }
+        }
+    }
+
+    private fun updateCountdown(remainingMs: Long) {
+        if (_binding == null) return
+        if (remainingMs <= 0L) {
+            binding.tvCountdown.visibility = View.GONE
+            return
+        }
+        binding.tvCountdown.visibility = View.VISIBLE
+        val totalSeconds = remainingMs / 1000
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        binding.tvCountdown.text = String.format("%d:%02d remaining", minutes, seconds)
+        binding.tvCountdown.setTextColor(
+            if (remainingMs < 60_000L) android.graphics.Color.parseColor("#FF5252")
+            else android.graphics.Color.parseColor("#64FFDA")
+        )
     }
 
     // ── UI STATE RENDERERS ───────────────────────────────────────────────────

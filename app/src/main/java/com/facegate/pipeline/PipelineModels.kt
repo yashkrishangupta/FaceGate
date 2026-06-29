@@ -17,6 +17,9 @@ object PipelineConfig {
     const val ANALYSIS_FPS       = 10
     const val FRAME_BUFFER_SIZE  = 8
 
+    // ── Attendance window ───────────────────────────────────
+    const val DEFAULT_WINDOW_MINUTES = 15
+
     // ── Quality thresholds ─────────────────────────────────
     const val MIN_FACE_SIZE_RATIO     = 0.05f
     const val MAX_YAW_DEGREES         = 30f

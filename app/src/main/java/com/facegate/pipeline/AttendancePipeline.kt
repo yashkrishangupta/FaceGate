@@ -62,6 +62,10 @@ class AttendancePipeline(
     private var sessionId: String? = null
     private val alreadyMarkedMap  = mutableMapOf<String, Long>()
 
+    // ── Attendance window tracking ───────────────────────────────────────────
+    private var windowMinutes    : Int = 10
+    private var sessionStartTime : Long = 0L
+
     // ── In-memory template cache (loaded from DB at session start) ───────────
     private val enrolledTemplates = mutableListOf<EnrolledTemplate>()
 
@@ -86,8 +90,10 @@ class AttendancePipeline(
         faceEmbedder.warmup()
     }
 
-    suspend fun startSession(sessionId: String) {
+    suspend fun startSession(sessionId: String, windowMinutes: Int = PipelineConfig.DEFAULT_WINDOW_MINUTES) {
         this.sessionId = sessionId
+        this.windowMinutes = windowMinutes
+        this.sessionStartTime = System.currentTimeMillis()
         alreadyMarkedMap.clear()
         startFrameBuffering()
 
@@ -125,6 +131,18 @@ class AttendancePipeline(
         endSession()
         faceDetector.close()
         faceEmbedder.close()
+    }
+
+    /** Returns true if the current time is still within the attendance window for this session. */
+    fun isWithinWindow(): Boolean {
+        val elapsed = System.currentTimeMillis() - sessionStartTime
+        return elapsed <= windowMinutes * 60 * 1000L
+    }
+
+    /** Returns remaining milliseconds in the attendance window (0 if expired). */
+    fun remainingWindowMs(): Long {
+        val elapsed = System.currentTimeMillis() - sessionStartTime
+        return (windowMinutes * 60 * 1000L - elapsed).coerceAtLeast(0L)
     }
 
 
@@ -435,11 +453,31 @@ class AttendancePipeline(
         when (decision) {
             is AttendanceDecision.Accept -> {
                 val timestamp = System.currentTimeMillis()
+
+                if (!isWithinWindow()) {
+                    repository.addConflict(
+                        ConflictEntity(
+                            topStudentId      = decision.studentId,
+                            topStudentName    = decision.studentName,
+                            topScore          = decision.confidence,
+                            secondStudentId   = "",
+                            secondStudentName = "",
+                            secondScore       = 0f,
+                            reason            = "Marked outside $windowMinutes-min window",
+                            sessionId         = sessionId ?: "no_session",
+                            timestamp         = timestamp,
+                            resolved          = false,
+                        )
+                    )
+                    return
+                }
+
                 alreadyMarkedMap[decision.studentId] = timestamp
 
                 repository.addAttendance(
                     AttendanceEntity(
                         studentId = decision.studentId,
+                        sessionId = this.sessionId, // ADD THIS
                         timeStamp = timestamp,
                         synced    = false,
                     )

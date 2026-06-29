@@ -76,9 +76,44 @@
                 android:paddingVertical="8dp"
                 android:background="@drawable/badge_blue"/>
 
+            <TextView
+                android:id="@+id/tvCountdown"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="10:00 remaining"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#64FFDA"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"
+                android:background="@drawable/badge_green"
+                android:visibility="gone"/>
+
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
+
+    <!-- ========================= -->
+    <!-- SESSION INFO BAR (wired by Person 3) -->
+    <!-- ========================= -->
+
+    <TextView
+        android:id="@+id/tvSessionInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:text="Maths 9-A"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="6dp"
+        android:background="@drawable/badge_blue"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/topCard"
+        app:layout_constraintStart_toStartOf="parent"/>
 
     <!-- ========================= -->
     <!-- CAMERA CARD -->
