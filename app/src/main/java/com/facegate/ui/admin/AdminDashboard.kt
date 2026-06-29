@@ -62,7 +62,7 @@ class AdminDashboard : Fragment() {
         _binding = null
     }
 
-    // ── Clock & Date ─────────────────────────────────────────────────────────
+    // ── Clock & Date ──────────────────────────────────────────────────────────
 
     private fun updateClock() {
         binding.tvClock.text = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
@@ -74,37 +74,31 @@ class AdminDashboard : Fragment() {
         ).format(Date())
     }
 
-    // ── Stats from DB ────────────────────────────────────────────────────────
+    // ── Stats from DB ─────────────────────────────────────────────────────────
 
     private fun observeStats() {
         lifecycleScope.launch {
             viewModel.stats.collect { stats ->
 
-                // ── Stat cards ────────────────────────────────────────────────
                 binding.tvTotalStudents.text = stats.totalStudents.toString()
                 binding.tvPresentToday.text  = stats.presentToday.toString()
                 binding.tvAbsentToday.text   = stats.absentToday.toString()
                 binding.tvHolidaysLeft.text  = stats.pendingConflicts.toString()
 
-                // ── Progress bars (live percentages) ──────────────────────────
-                // Total students bar is always full — it's a reference, not a ratio
                 binding.progressTotalStudents.progress = if (stats.totalStudents > 0) 100 else 0
                 binding.progressPresent.progress       = stats.attendancePct
                 binding.progressAbsent.progress        = stats.absentPct
-                // Conflicts bar: capped at 100 so it looks proportional up to 10 conflicts
                 binding.progressConflicts.progress     =
                     (stats.pendingConflicts * 10).coerceAtMost(100)
 
-                // ── Dynamic subtitles ─────────────────────────────────────────
-                binding.tvPresentSubtitle.text = "${stats.attendancePct}% attendance rate"
-                binding.tvAbsentSubtitle.text  = "${stats.absentPct}% absent today"
+                binding.tvPresentSubtitle.text   = "${stats.attendancePct}% attendance rate"
+                binding.tvAbsentSubtitle.text    = "${stats.absentPct}% absent today"
                 binding.tvConflictsSubtitle.text = when (stats.pendingConflicts) {
                     0    -> "No unresolved matches"
                     1    -> "1 match needs review"
                     else -> "${stats.pendingConflicts} matches need review"
                 }
 
-                // ── Tile subtitles ────────────────────────────────────────────
                 binding.tvTileStudentsSub.text = when (stats.totalStudents) {
                     0    -> "No students yet"
                     1    -> "1 enrolled"
@@ -117,7 +111,6 @@ class AdminDashboard : Fragment() {
                 }
                 binding.tvTileReportsSub.text = "${stats.attendancePct}% today"
 
-                // ── Conflict banner (visible only when conflicts > 0) ─────────
                 if (stats.pendingConflicts > 0) {
                     binding.conflictBanner.visibility = View.VISIBLE
                     binding.tvConflictTitle.text = when (stats.pendingConflicts) {
@@ -131,9 +124,10 @@ class AdminDashboard : Fragment() {
         }
     }
 
-    // ── Navigation ───────────────────────────────────────────────────────────
+    // ── Navigation ────────────────────────────────────────────────────────────
 
     private fun setupClickListeners() {
+        // ── Existing tiles ─────────────────────────────────────────────────
         binding.tileStudents.setOnClickListener {
             findNavController().navigate(R.id.action_dashboard_to_students)
         }
@@ -162,5 +156,16 @@ class AdminDashboard : Fragment() {
         binding.navExit.setOnClickListener {
             requireActivity().onBackPressedDispatcher.onBackPressed()
         }
+
+        // ── NEW tiles — Timetable, Changes Log, Schedule ───────────────────
+        //binding.tileTimetable.setOnClickListener {
+        //    findNavController().navigate(R.id.action_dashboard_to_timetableSetup)
+        //}
+        //binding.tileChangesLog.setOnClickListener {
+        //    findNavController().navigate(R.id.action_dashboard_to_changesLog)
+        //}
+        //binding.tileStartAttendance.setOnClickListener {
+        //    findNavController().navigate(R.id.action_dashboard_to_schedule)
+        //}
     }
 }

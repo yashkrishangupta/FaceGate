@@ -9,6 +9,14 @@ import com.facegate.storage.entity.AttendanceEntity
 import com.facegate.storage.entity.ConflictEntity
 import com.facegate.storage.entity.StudentEntity
 import com.facegate.storage.entity.SyncLogEntity
+import com.facegate.storage.dao.TimetableDao
+import com.facegate.storage.dao.SessionDao
+import com.facegate.storage.dao.OverrideDao
+import com.facegate.storage.dao.HolidayDao
+import com.facegate.storage.entity.TimetableEntity
+import com.facegate.storage.entity.SessionEntity
+import com.facegate.storage.entity.OverrideEntity
+import com.facegate.storage.entity.HolidayEntity
 
 class TemplateRepository(
     private val studentDao    : StudentDao,
@@ -138,4 +146,36 @@ class TemplateRepository(
 
     suspend fun resolveAllConflictsForStudent(studentId: String) =
         conflictDao.resolveAllConflictsForStudent(studentId)
+    
+    // ── Timetable ─────────────────────────────────────────────────────────
+    suspend fun insertTimetable(entry: TimetableEntity) = timetableDao.insert(entry)
+    suspend fun updateTimetable(entry: TimetableEntity) = timetableDao.update(entry)
+    suspend fun deleteTimetable(id: Int) = timetableDao.delete(id)
+    suspend fun getTimetableForDay(dayOfWeek: Int) = timetableDao.getForDay(dayOfWeek)
+    suspend fun getAllTimetable() = timetableDao.getAll()
+    suspend fun getAllBatches() = timetableDao.getAllBatches()
+    suspend fun getAllSubjects() = timetableDao.getAllSubjects()
+
+    // ── Sessions ───────────────────────────────────────────────────────────
+    suspend fun insertSession(session: SessionEntity) = sessionDao.insert(session)
+    suspend fun endSession(sessionId: String, endedAt: Long) = sessionDao.endSession(sessionId, endedAt)
+    suspend fun getActiveSession() = sessionDao.getActiveSession()
+    suspend fun getSessionsForDate(startOfDay: Long, endOfDay: Long) = sessionDao.getSessionsForDate(startOfDay, endOfDay)
+    suspend fun getSessionById(sessionId: String) = sessionDao.getById(sessionId)
+
+    // ── Overrides ──────────────────────────────────────────────────────────
+    suspend fun insertOverride(override: OverrideEntity) = overrideDao.insert(override)
+    suspend fun getOverridesForSession(sessionId: String) = overrideDao.getForSession(sessionId)
+    suspend fun getAllOverrides() = overrideDao.getAll()
+
+    // ── Holidays ───────────────────────────────────────────────────────────
+    suspend fun insertHoliday(holiday: HolidayEntity) = holidayDao.insert(holiday)
+    suspend fun deleteHoliday(date: String) = holidayDao.delete(date)
+    suspend fun isHoliday(date: String): Boolean = holidayDao.isHoliday(date) > 0
+    suspend fun getAllHolidays() = holidayDao.getAll()
+    suspend fun getUpcomingHolidays() = holidayDao.getUpcoming(getTodayString())
+
+    private fun getTodayString() = java.text.SimpleDateFormat(
+        "yyyy-MM-dd", java.util.Locale.getDefault()
+    ).format(java.util.Date())
 }
