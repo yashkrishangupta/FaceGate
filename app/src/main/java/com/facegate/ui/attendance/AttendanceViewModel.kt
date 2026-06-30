@@ -8,6 +8,8 @@ import com.facegate.pipeline.AttendancePipeline
 import com.facegate.pipeline.PipelineFrameStatus
 import com.facegate.pipeline.QualityFailReason
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -51,6 +53,9 @@ class AttendanceViewModel @Inject constructor(
     private val _scanState = MutableStateFlow<ScanState>(ScanState.Idle)
     val scanState: StateFlow<ScanState> = _scanState
 
+    private val _windowCountdown = MutableStateFlow(0L)
+    val windowCountdown: StateFlow<Long> = _windowCountdown
+
     // Prevents queuing up multiple processFrame calls while one ML inference is running.
     // ML inference takes 150-400ms; camera delivers frames faster than that.
     @Volatile
@@ -64,23 +69,28 @@ class AttendanceViewModel @Inject constructor(
     // ── Session lifecycle ────────────────────────────────────────────────────
 
     /**
-     * Start an attendance session. Call from Fragment.onResume().
+     * Start an attendance session. sessionId now comes from TodayScheduleFragment,
+     * not generated here.
      * Loads enrolled students from DB into memory for the pipeline.
      */
-    fun startSession() {
-        val sessionId = "SESSION_" + SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+    fun startSession(sessionId: String, subject: String, batch: String, windowMinutes: Int) {
         viewModelScope.launch {
             try { pipeline.init() } catch (_: Exception) {}
-            pipeline.startSession(sessionId)
+            pipeline.startSession(sessionId, windowMinutes)
             _scanState.value = ScanState.Scanning("Ready — show your face")
+            startCountdownTimer(windowMinutes)
         }
     }
+
+    // Tracks the running countdown coroutine so it can be cancelled on stopSession()
+    private var countdownJob: Job? = null
 
     /**
      * End the session. Call from Fragment.onPause() or "End Attendance" button.
      * Clears biometric data from memory.
      */
     fun stopSession() {
+        countdownJob?.cancel()
         pipeline.endSession()
         _scanState.value = ScanState.Idle
     }
@@ -179,6 +189,29 @@ class AttendanceViewModel @Inject constructor(
 
     private fun List<QualityFailReason>.toDisplayMessage(): String =
         firstOrNull()?.toMessage() ?: "Hold still — scanning…"
+
+    /**
+     * Ticks every second while the session's attendance window is open.
+     * Updates _windowCountdown with remaining ms and flips scan state to a
+     * "window closed" message once the window expires.
+     */
+    private fun startCountdownTimer(windowMinutes: Int) {
+        countdownJob?.cancel()
+        countdownJob = viewModelScope.launch {
+            while (true) {
+                val remaining = pipeline.remainingWindowMs()
+                _windowCountdown.value = remaining
+                if (remaining <= 0L) {
+                    _scanState.value = ScanState.Failed(
+                        title   = "Window closed",
+                        message = "Window closed — late marks go to review",
+                    )
+                    break
+                }
+                delay(1000L)
+            }
+        }
+    }
 
     // ── UI helpers ───────────────────────────────────────────────────────────
 
