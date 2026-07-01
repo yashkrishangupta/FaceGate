@@ -97,7 +97,7 @@ class TodayScheduleFragment : Fragment() {
             orientation = LinearLayout.HORIZONTAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             gravity = Gravity.CENTER_VERTICAL
-            setBackgroundResource(com.facegate.R.drawable.card_dark)          // light card surface
+            setBackgroundResource(com.facegate.R.drawable.card_dark)          // dark card, not white
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -123,13 +123,13 @@ class TodayScheduleFragment : Fragment() {
         centerCol.addView(TextView(ctx).apply {
             text = item.entry.subject
             textSize = 14f
-            setTextColor(Color.parseColor("#ffffff"))
+            setTextColor(Color.WHITE)
             setTypeface(null, Typeface.BOLD)
         })
         centerCol.addView(TextView(ctx).apply {
             text = item.entry.batch
             textSize = 11f
-            setTextColor(Color.parseColor("#ffffff"))
+            setTextColor(Color.parseColor("#90A6BD"))
         })
 
         // Right: HH:MM + status chip
@@ -144,7 +144,7 @@ class TodayScheduleFragment : Fragment() {
         rightCol.addView(TextView(ctx).apply {
             text = String.format("%02d:%02d", item.entry.scheduledHour, item.entry.scheduledMinute)
             textSize = 12f
-            setTextColor(Color.parseColor("#ffffff"))
+            setTextColor(Color.parseColor("#90A6BD"))
             gravity = Gravity.END
         })
         rightCol.addView(TextView(ctx).apply {
