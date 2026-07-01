@@ -95,13 +95,13 @@ class TodayScheduleFragment : Fragment() {
 
         val row = LinearLayout(ctx).apply {
             orientation = LinearLayout.HORIZONTAL
-            setPadding(32, 32, 32, 32)
+            setPadding(dp(16), dp(16), dp(16), dp(16))
             gravity = Gravity.CENTER_VERTICAL
-            setBackgroundResource(com.facegate.R.drawable.card_rounded_white)
+            setBackgroundResource(com.facegate.R.drawable.card_dark)          // dark card, not white
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
-            ).apply { bottomMargin = 24 }
+            ).apply { bottomMargin = dp(10) }
         }
 
         // Left: period chip "P1"
@@ -122,12 +122,13 @@ class TodayScheduleFragment : Fragment() {
         centerCol.addView(TextView(ctx).apply {
             text = item.entry.subject
             textSize = 14f
+            setTextColor(Color.WHITE)
             setTypeface(null, Typeface.BOLD)
         })
         centerCol.addView(TextView(ctx).apply {
             text = item.entry.batch
             textSize = 11f
-            setTextColor(Color.GRAY)
+            setTextColor(Color.parseColor("#90A6BD"))
         })
 
         // Right: HH:MM + status chip
@@ -142,6 +143,8 @@ class TodayScheduleFragment : Fragment() {
         rightCol.addView(TextView(ctx).apply {
             text = String.format("%02d:%02d", item.entry.scheduledHour, item.entry.scheduledMinute)
             textSize = 12f
+            setTextColor(Color.parseColor("#90A6BD"))
+            gravity = Gravity.END
         })
         rightCol.addView(TextView(ctx).apply {
             text = item.status.name
@@ -257,4 +260,7 @@ class TodayScheduleFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+
+    private fun dp(value: Int): Int =
+        (value * resources.displayMetrics.density).toInt()
 }
