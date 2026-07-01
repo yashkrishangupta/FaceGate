@@ -24,7 +24,9 @@ class ManualAttendanceFragment : Fragment() {
 
     private val viewModel: ManualAttendanceViewModel by viewModels()
 
+    private lateinit var dayTabRow      : LinearLayout
     private lateinit var classTabRow    : LinearLayout
+    private lateinit var sessionTabRow  : LinearLayout
     private lateinit var studentListCol : LinearLayout
     private lateinit var tvEmptyMsg     : TextView
 
@@ -35,7 +37,7 @@ class ManualAttendanceFragment : Fragment() {
     ): View {
         val root = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#F0F4F8"))
+            setBackgroundResource(com.facegate.R.drawable.bg_main_gradient)
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -47,8 +49,8 @@ class ManualAttendanceFragment : Fragment() {
             orientation = LinearLayout.HORIZONTAL
             gravity     = Gravity.CENTER_VERTICAL
             setPadding(dp(20), dp(14), dp(20), dp(14))
-            setBackgroundColor(Color.WHITE)
-            elevation = dp(2).toFloat()
+            setBackgroundColor(Color.parseColor("#0D1727"))
+            elevation = dp(6).toFloat()
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -59,9 +61,9 @@ class ManualAttendanceFragment : Fragment() {
             text     = "← Back"
             textSize = 13f
             gravity  = Gravity.CENTER
-            setTextColor(Color.parseColor("#444441"))
+            setTextColor(Color.parseColor("#5DA9FF"))
             setPadding(dp(14), 0, dp(14), 0)
-            setBackgroundResource(com.facegate.R.drawable.icon_action_bg)
+            setBackgroundResource(com.facegate.R.drawable.badge_blue)
             isClickable = true
             isFocusable = true
             layoutParams = LinearLayout.LayoutParams(
@@ -74,12 +76,43 @@ class ManualAttendanceFragment : Fragment() {
             text     = "Manual Attendance"
             textSize = 17f
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(Color.parseColor("#1A202C"))
+            setTextColor(Color.WHITE)
         }
 
         topBar.addView(btnBack)
         topBar.addView(tvTitle)
         root.addView(topBar)
+
+        // ── Day filter row (today + past 6 days — manual edits limited to 1 week) ──
+        val dayScroll = HorizontalScrollView(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
+            setBackgroundColor(Color.parseColor("#0D1727"))
+        }
+        dayTabRow = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(dp(16), dp(10), dp(16), dp(4))
+        }
+        dayScroll.addView(dayTabRow)
+        root.addView(dayScroll)
+
+        // ── Session filter row ─────────────────────────────────────────────────
+        val sessionScroll = HorizontalScrollView(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
+            setBackgroundColor(Color.parseColor("#111C30"))
+        }
+
+        sessionTabRow = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(dp(16), dp(8), dp(16), dp(8))
+        }
+        sessionScroll.addView(sessionTabRow)
+        root.addView(sessionScroll)
 
         // ── Class tabs ────────────────────────────────────────────────────────
         val tabScroll = HorizontalScrollView(requireContext()).apply {
@@ -87,7 +120,7 @@ class ManualAttendanceFragment : Fragment() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
             )
-            setBackgroundColor(Color.WHITE)
+            setBackgroundColor(Color.parseColor("#0D1727"))
         }
 
         classTabRow = LinearLayout(requireContext()).apply {
@@ -107,7 +140,7 @@ class ManualAttendanceFragment : Fragment() {
 
         val listCard = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.WHITE)
+            setBackgroundResource(com.facegate.R.drawable.card_dark)
             setPadding(0, 0, 0, dp(24))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -120,7 +153,7 @@ class ManualAttendanceFragment : Fragment() {
             textSize   = 14f
             gravity    = Gravity.CENTER
             visibility = View.GONE
-            setTextColor(Color.parseColor("#888780"))
+            setTextColor(Color.parseColor("#90A6BD"))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -149,11 +182,13 @@ class ManualAttendanceFragment : Fragment() {
             viewModel.state.collect { state ->
                 when (state) {
                     is ManualAttendanceState.Loading -> {
+                        dayTabRow.removeAllViews()
                         classTabRow.removeAllViews()
                         studentListCol.removeAllViews()
                         tvEmptyMsg.visibility = View.GONE
                     }
                     is ManualAttendanceState.Empty -> {
+                        dayTabRow.removeAllViews()
                         classTabRow.removeAllViews()
                         studentListCol.removeAllViews()
                         tvEmptyMsg.text       = "No students enrolled yet.\nGo to Students → Enrol to add students."
@@ -161,13 +196,92 @@ class ManualAttendanceFragment : Fragment() {
                     }
                     is ManualAttendanceState.Loaded -> {
                         tvEmptyMsg.visibility = View.GONE
+                        buildDayTabs(state.days, state.selectedDay)
+                        buildSessionTabs(state.sessions, state.selectedSession, state.selectedDay.label)
                         buildClassTabs(state.classes, state.selectedClass)
-                        buildStudentList(state.students)
+                        buildStudentList(state.students, state.selectedSession?.sessionId)
                     }
                 }
             }
         }
     }
+
+    // ── Day tabs ───────────────────────────────────────────────────────────────
+
+    private fun buildDayTabs(days: List<SelectableDay>, selected: SelectableDay) {
+        dayTabRow.removeAllViews()
+        days.forEach { day ->
+            dayTabRow.addView(buildTab(
+                label      = day.label,
+                isSelected = day.startOfDay == selected.startOfDay,
+                onClick    = { viewModel.selectDay(day) }
+            ))
+        }
+    }
+
+    // ── Session tabs ──────────────────────────────────────────────────────────
+
+    private fun buildSessionTabs(
+        sessions: List<com.facegate.storage.entity.SessionEntity>,
+        selected: com.facegate.storage.entity.SessionEntity?,
+        dayLabel: String,
+    ) {
+        sessionTabRow.removeAllViews()
+
+        // Defensive de-dupe: if duplicate session rows exist for the same period
+        // (same timetable period + subject/batch, started within a minute of each
+        // other), only show the most recent one. The real fix is upstream in
+        // TodayScheduleViewModel.startSession() reusing an existing session
+        // instead of creating a new row every time "Start" is tapped for a period
+        // that's already been started — this is just a display-side safety net
+        // for any duplicate rows created before that fix.
+        val deduped = sessions
+            .groupBy { Triple(it.timetableId, it.subject, it.batch) }
+            .values
+            .map { group -> group.maxByOrNull { it.startTime }!! }
+            .sortedBy { it.startTime }
+
+        // "All (selected day)" tab
+        val allTab = buildTab(
+            label      = "All — $dayLabel",
+            isSelected = selected == null,
+            onClick    = { viewModel.selectSession(null) }
+        )
+        sessionTabRow.addView(allTab)
+
+        deduped.forEach { session ->
+            val timeFmt = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+            val label   = "${session.subject} · ${session.batch} · ${timeFmt.format(java.util.Date(session.startTime))}"
+            sessionTabRow.addView(buildTab(
+                label      = label,
+                isSelected = session.sessionId == selected?.sessionId,
+                onClick    = { viewModel.selectSession(session) }
+            ))
+        }
+    }
+
+    private fun buildTab(label: String, isSelected: Boolean, onClick: () -> Unit) =
+        TextView(requireContext()).apply {
+            text     = label
+            textSize = 11f
+            gravity  = Gravity.CENTER
+            typeface = if (isSelected) android.graphics.Typeface.DEFAULT_BOLD
+                       else            android.graphics.Typeface.DEFAULT
+            setPadding(dp(14), dp(7), dp(14), dp(7))
+            setTextColor(
+                if (isSelected) Color.parseColor("#5DA9FF") else Color.parseColor("#90A6BD")
+            )
+            setBackgroundColor(
+                if (isSelected) Color.parseColor("#1A3A5C") else Color.TRANSPARENT
+            )
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply { marginEnd = dp(6) }
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { onClick() }
+        }
 
     // ── Class tabs ────────────────────────────────────────────────────────────
 
@@ -182,10 +296,10 @@ class ManualAttendanceFragment : Fragment() {
                 gravity  = Gravity.CENTER
                 setPadding(dp(16), dp(8), dp(16), dp(8))
                 setTextColor(
-                    if (isSelected) Color.parseColor("#1D9E75") else Color.parseColor("#888780")
+                    if (isSelected) Color.parseColor("#5DA9FF") else Color.parseColor("#90A6BD")
                 )
                 setBackgroundColor(
-                    if (isSelected) Color.parseColor("#E6F7F2") else Color.TRANSPARENT
+                    if (isSelected) Color.parseColor("#1A3A5C") else Color.TRANSPARENT
                 )
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -201,7 +315,7 @@ class ManualAttendanceFragment : Fragment() {
 
     // ── Student rows ──────────────────────────────────────────────────────────
 
-    private fun buildStudentList(students: List<StudentWithStatus>) {
+    private fun buildStudentList(students: List<StudentWithStatus>, sessionId: String?) {
         studentListCol.removeAllViews()
 
         if (students.isEmpty()) {
@@ -247,13 +361,13 @@ class ManualAttendanceFragment : Fragment() {
                 text     = sws.student.name
                 textSize = 14f
                 typeface = Typeface.DEFAULT_BOLD
-                setTextColor(Color.parseColor("#1A202C"))
+                setTextColor(Color.WHITE)
             }
 
             val tvId = TextView(requireContext()).apply {
                 text     = sws.student.studentId
                 textSize = 11f
-                setTextColor(Color.parseColor("#888780"))
+                setTextColor(Color.parseColor("#90A6BD"))
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -314,7 +428,7 @@ class ManualAttendanceFragment : Fragment() {
 
             if (index < students.size - 1) {
                 studentListCol.addView(View(requireContext()).apply {
-                    setBackgroundColor(Color.parseColor("#0F000000"))
+                    setBackgroundColor(Color.parseColor("#1E2E44"))
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT, 1
                     ).apply { marginStart = dp(20); marginEnd = dp(20) }
