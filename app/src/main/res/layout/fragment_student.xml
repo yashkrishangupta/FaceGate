@@ -14,7 +14,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:padding="14dp"
-        android:background="@color/surface_topbar"
+        android:background="#0D1727"
         android:elevation="6dp">
 
         <TextView
@@ -39,7 +39,7 @@
             android:text="Student Directory"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@color/text_on_surface"
+            android:textColor="#FFFFFF"
             android:layout_marginStart="14dp"/>
 
         <TextView
@@ -74,10 +74,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
-                app:cardBackgroundColor="@color/surface_card"
+                app:cardBackgroundColor="#1A2B47"
                 app:cardCornerRadius="18dp"
                 app:cardElevation="4dp"
-                app:strokeColor="@color/border_card"
+                app:strokeColor="#2F4E73"
                 app:strokeWidth="1dp">
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -107,7 +107,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Directory Status"
-                            android:textColor="@color/text_on_surface"
+                            android:textColor="#FFFFFF"
                             android:textSize="17sp"
                             android:textStyle="bold"/>
                         <TextView
@@ -115,7 +115,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Loading..."
-                            android:textColor="@color/text_on_surface_muted"
+                            android:textColor="#90A6BD"
                             android:textSize="13sp"
                             android:layout_marginTop="4dp"/>
                     </LinearLayout>
@@ -127,7 +127,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Enrolled Students"
-                android:textColor="@color/text_on_surface_muted"
+                android:textColor="#90A6BD"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:letterSpacing="0.04"
